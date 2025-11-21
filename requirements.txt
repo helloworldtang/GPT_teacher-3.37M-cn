@@ -1,5 +1,6 @@
-torch>=2.2
-PyYAML>=6.0
-numpy>=1.24
-tokenizers>=0.15
-sentencepiece>=0.1.99
+pip>=21.0          # 确保依赖解析能力，避免安装失败
+torch>=2.2,<2.5    # 锁定 2.x 稳定区间，2.5+ 已完善 NumPy 2.x 支持，但暂不冒险
+PyYAML>=6.0,<7.0   # 限制在 6.x 稳定系列，避开未来 7.x 大版本变更
+numpy>=1.24,<2.0   # 核心修复：满足原版本要求，同时彻底避开 NumPy 2.x 兼容问题
+tokenizers>=0.15,<0.25  # 锁定 0.15-0.24 稳定区间（Hugging Face 官方推荐）
+sentencepiece>=0.1.99,<0.2.0  # 限制在 0.1.x 系列，避免 0.2.x 重构版本风险
