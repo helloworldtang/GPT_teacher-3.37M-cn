@@ -11,7 +11,8 @@ training:
   weight_decay: 0.01
   max_steps: 2000
   warmup_steps: 5
-  eval_interval: 20
+  eval_interval: 100
+  save_interval: 200
   save_dir: checkpoints
   seed: 42
 data:
