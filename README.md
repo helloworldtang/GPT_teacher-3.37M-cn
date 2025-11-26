@@ -1,4 +1,4 @@
-# GPT Teacher — 轻量中文 GPT 教学项目：用普通 CPU 从零到可用，支持训练与推理演示
+# GPT Teacher — 从 0 到 1 在 CPU 上训练可推理可演示的小参数中文GPT，实现中文GPT训练平民化，实现训练中文GPT自由
 
 本项目面向课堂教学，[目标是让初学者用一台普通 CPU 电脑，在 45 分钟内从零跑通一个小参数的中文 GPT](https://mp.weixin.qq.com/s/gUgY_TIRSoEyzZ2YRVGB2w)：看清核心流程、跑通训练、得到“可用的中文回答”，并支持简单的推理演示。
 
