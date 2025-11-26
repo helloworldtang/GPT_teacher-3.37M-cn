@@ -1,6 +1,13 @@
-# GPT Teacher — 从 0 到 1 在 CPU 上训练可演示的小参数中文GPT，中文GPT平民化，实现训练中文GPT自由
+# GPT Teacher — 轻量中文 GPT 教学项目：用普通 CPU 从零到可用，支持训练与推理演示
 
 本项目面向课堂教学，[目标是让初学者用一台普通 CPU 电脑，在 45 分钟内从零跑通一个小参数的中文 GPT](https://mp.weixin.qq.com/s/gUgY_TIRSoEyzZ2YRVGB2w)：看清核心流程、跑通训练、得到“可用的中文回答”，并支持简单的推理演示。
+
+围绕中文 GPT 的平民化与技术人训练中文 GPT 自由，采用从 0 到 1 的方式：不依赖任何现成“基座模型”或预训练权重；模型结构与权重均由本项目从零构建与训练，适合教学、复现与改造。
+
+## 项目目标
+
+- 中文 GPT 平民化：在普通 CPU 上也能训练成功，Apple Silicon 可用 MPS 加速，整体耗时不长（示例 ≈127.72s，设备：mps）。
+- 人人可自由训练中文 GPT：开放完整链路（分词 → 训练 → 推理），降低门槛、强调可复现与可改造。
 
 ## 项目收获
 
@@ -79,12 +86,16 @@ python -m src.build_tokenizer
   - `data.val_path: data/val.jsonl`
   - `tokenizer.type: hf_tokenizers`
   - `tokenizer.path: tokenizer/tokenizer.json`
-  - `training.max_steps: 1500–2000`（课堂机器允许的话）
+  - `training.max_steps: 2000`（推荐，Apple Silicon 可用 MPS 加速）
+  - 可选：`training.device: mps|cpu`（不设则自动优先使用 MPS，如可用）
 
-### 4. 训练（仅 CPU）
+### 4. 训练（支持 MPS/CPU）
 
 ```bash
 python -m src.train
+# 设备说明：
+# - 默认自动选择：Apple Silicon 上优先使用 MPS；否则使用 CPU
+# - 如需指定设备：在 config.yaml 增加 training.device: mps 或 cpu
 ```
 
 - 观察日志：
@@ -95,10 +106,12 @@ python -m src.train
 
 ```bash
 # Question1
-python -m src.infer --prompt "什么是注意力机制？" --ckpt checkpoints/last.pt --temperature 0.0 --show_label
+python -m src.infer --prompt "什么是注意力机制？" --ckpt checkpoints/last.pt --temperature 0.0 --show_label --device cpu
 
 # Question2
-python -m src.infer --prompt "解释蒸馏水与纯水区别？" --ckpt checkpoints/last.pt --temperature 0.0 --show_label
+python -m src.infer --prompt "解释蒸馏水与纯水区别？" --ckpt checkpoints/last.pt --temperature 0.0 --show_label --device cpu
+
+> 说明：Apple Silicon 上可使用 `--device mps` 获得推理加速；量化权重仅支持在 CPU 上推理。
 ```
 
 - 期望结果（示例）：
@@ -187,7 +200,7 @@ python -m src.infer --prompt "什么是注意力机制？" --ckpt checkpoints/qu
 ## 实测与分析（答案可用、与问题相关）
 
 - 环境与数据：在 mac pro 2.6GHz 6c i7（16GB DDR4）上，使用 510 条训练集与 90 条验证集，CPU 训练 2000 步。
-- 耗时与结果：总耗时约 19.78 分钟（≈1186.8s），得到“中文可读、与问题相关”的可用回答（固定问题 Q1/Q2 实测通过）。
+- 耗时与结果：总耗时约 21.00 分钟（≈1259.86s，设备：mps），得到“中文可读、与问题相关”的可用回答（固定问题 Q1/Q2 实测通过）。
 - 配置要点：`n_layer=4, n_head=4, n_embd=256, seq_len=128`；HF ByteLevel BPE 分词器（设置 ByteLevel 解码器）；权重共享、RMSNorm、RoPE；AdamW+预热+余弦；梯度累积与裁剪。
 - 效率核心原因（技术角度）：
   - 小模型与短序列降低注意力计算开销；权重共享减少参数与内存占用；RMSNorm 与 RoPE 计算简洁且稳定。
@@ -269,6 +282,7 @@ python -m src.infer --prompt "什么是注意力机制？" --ckpt checkpoints/qu
   - 参见 `huggingface_hub` 的 `upload_file`/`upload_folder` 接口，适合脚本化批量上传。
 
 ## Hugging Face 使用指引（下载并在本项目推理）
+
 - 仓库地址：`https://huggingface.co/GPTcn/GPT_teacher-3.37M-cn`
 - 方式一：Git LFS 克隆
   - `git lfs install`

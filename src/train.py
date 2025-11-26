@@ -15,7 +15,18 @@ def load_config(path):
     with open(path, "r") as f:
         return yaml.safe_load(f)
 
-def get_device():
+def get_device(cfg):
+    d = (
+        cfg.get("training", {}).get("device")
+        if isinstance(cfg, dict)
+        else None
+    )
+    if d == "mps" and torch.backends.mps.is_available():
+        return torch.device("mps")
+    if d == "cpu" or d is None:
+        if torch.backends.mps.is_available():
+            return torch.device("mps")
+        return torch.device("cpu")
     return torch.device("cpu")
 
 def train():
@@ -32,7 +43,7 @@ def train():
         seq_len=seq_len,
         dropout=cfg["model"]["dropout"],
     )
-    device = get_device()
+    device = get_device(cfg)
     model.to(device)
     bs = cfg["training"]["batch_size"]
     mb = cfg["training"]["micro_batch"]
@@ -82,7 +93,7 @@ def train():
     total_elapsed = time.time() - start_time
     with open(os.path.join(save_dir, "train_time.txt"), "w") as f:
         f.write(f"elapsed_seconds={total_elapsed:.2f}\n")
-    qmodel = torch.quantization.quantize_dynamic(model, {nn.Linear}, dtype=torch.qint8)
+    qmodel = torch.quantization.quantize_dynamic(model.to("cpu"), {nn.Linear}, dtype=torch.qint8)
     torch.save({"model": qmodel.state_dict(), "cfg": cfg}, os.path.join(save_dir, "quantized.pt"))
 
 def evaluate(model, loader, loss_fn, device):
