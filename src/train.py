@@ -2,6 +2,7 @@ import os
 import yaml
 import math
 import time
+import argparse
 
 import torch
 import torch.nn as nn
@@ -11,23 +12,31 @@ from .utils import set_seed, ensure_dir, num_threads
 from .data import build_datasets, collate
 from .model import GPT
 
+
 def load_config(path):
     with open(path, "r") as f:
         return yaml.safe_load(f)
 
-def get_device(cfg=None):
-    want = None
-    if isinstance(cfg, dict):
+
+def get_device(cfg=None, want: str | None = None):
+    if want is None and isinstance(cfg, dict):
         want = cfg.get("training", {}).get("device")
-    if want == "cuda" and torch.cuda.is_available():
-        return torch.device("cuda")
+    if want == "gpu":
+        want = "cuda"
+    if want == "cuda":
+        if torch.cuda.is_available():
+            return torch.device("cuda")
+        raise RuntimeError("Requested CUDA device but CUDA is not available")
     if want == "cpu":
         return torch.device("cpu")
-    if torch.cuda.is_available():
-        return torch.device("cuda")
-    return torch.device("cpu")
+    if want in (None, "auto"):
+        if torch.cuda.is_available():
+            return torch.device("cuda")
+        return torch.device("cpu")
+    raise RuntimeError(f"Unknown device option: {want}")
 
-def train():
+
+def train(device_arg: str | None = None):
     cfg = load_config("config.yaml")
     set_seed(cfg["training"]["seed"])
     torch.set_num_threads(num_threads())
@@ -41,20 +50,38 @@ def train():
         seq_len=seq_len,
         dropout=cfg["model"]["dropout"],
     )
-    device = get_device(cfg)
+    device = get_device(cfg, device_arg)
     model.to(device)
     bs = cfg["training"]["batch_size"]
     mb = cfg["training"]["micro_batch"]
-    train_loader = DataLoader(train_ds, batch_size=mb, shuffle=True, num_workers=0, collate_fn=lambda b: collate(b, seq_len, tok.pad_id))
-    val_loader = DataLoader(val_ds, batch_size=mb, shuffle=False, num_workers=0, collate_fn=lambda b: collate(b, seq_len, tok.pad_id))
-    opt = torch.optim.AdamW(model.parameters(), lr=cfg["training"]["lr"], weight_decay=cfg["training"]["weight_decay"])
+    train_loader = DataLoader(
+        train_ds,
+        batch_size=mb,
+        shuffle=True,
+        num_workers=0,
+        collate_fn=lambda b: collate(b, seq_len, tok.pad_id),
+    )
+    val_loader = DataLoader(
+        val_ds,
+        batch_size=mb,
+        shuffle=False,
+        num_workers=0,
+        collate_fn=lambda b: collate(b, seq_len, tok.pad_id),
+    )
+    opt = torch.optim.AdamW(
+        model.parameters(),
+        lr=cfg["training"]["lr"],
+        weight_decay=cfg["training"]["weight_decay"],
+    )
     total_steps = cfg["training"]["max_steps"]
     warmup = cfg["training"]["warmup_steps"]
+
     def lr_lambda(step):
         if step < warmup:
             return step / max(1, warmup)
         t = (step - warmup) / max(1, total_steps - warmup)
         return 0.5 * (1 + math.cos(math.pi * t))
+
     sched = torch.optim.lr_scheduler.LambdaLR(opt, lr_lambda)
     loss_fn = nn.CrossEntropyLoss(ignore_index=-100)
     save_dir = cfg["training"]["save_dir"]
@@ -79,20 +106,33 @@ def train():
                 step += 1
                 accum = 0
                 if step % 10 == 0:
-                    print(f"step {step} loss {loss.item():.4f} lr {sched.get_last_lr()[0]:.6f}")
+                    print(
+                        f"step {step} loss {loss.item():.4f} lr {sched.get_last_lr()[0]:.6f}"
+                    )
                 if step % cfg["training"]["eval_interval"] == 0:
                     eval_loss = evaluate(model, val_loader, loss_fn, device)
                     elapsed = time.time() - start_time
                     print(f"eval loss {eval_loss:.4f} elapsed {elapsed:.1f}s")
-                    torch.save({"model": model.state_dict(), "cfg": cfg}, os.path.join(save_dir, "last.pt"))
+                    torch.save(
+                        {"model": model.state_dict(), "cfg": cfg},
+                        os.path.join(save_dir, "last.pt"),
+                    )
                 if step >= total_steps:
                     break
-    torch.save({"model": model.state_dict(), "cfg": cfg}, os.path.join(save_dir, "last.pt"))
+    torch.save(
+        {"model": model.state_dict(), "cfg": cfg}, os.path.join(save_dir, "last.pt")
+    )
     total_elapsed = time.time() - start_time
     with open(os.path.join(save_dir, "train_time.txt"), "w") as f:
         f.write(f"elapsed_seconds={total_elapsed:.2f}\n")
-    qmodel = torch.quantization.quantize_dynamic(model.to("cpu"), {nn.Linear}, dtype=torch.qint8)
-    torch.save({"model": qmodel.state_dict(), "cfg": cfg}, os.path.join(save_dir, "quantized.pt"))
+    qmodel = torch.quantization.quantize_dynamic(
+        model.to("cpu"), {nn.Linear}, dtype=torch.qint8
+    )
+    torch.save(
+        {"model": qmodel.state_dict(), "cfg": cfg},
+        os.path.join(save_dir, "quantized.pt"),
+    )
+
 
 def evaluate(model, loader, loss_fn, device):
     model.eval()
@@ -109,5 +149,11 @@ def evaluate(model, loader, loss_fn, device):
     model.train()
     return total / max(1, count)
 
+
 if __name__ == "__main__":
-    train()
+    ap = argparse.ArgumentParser()
+    ap.add_argument(
+        "--device", type=str, default="auto", choices=["auto", "cuda", "gpu", "cpu"]
+    )
+    args = ap.parse_args()
+    train(args.device)
