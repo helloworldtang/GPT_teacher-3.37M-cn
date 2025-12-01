@@ -90,6 +90,13 @@ python -m src.train
 - 观察日志：
   - 每`eval_interval`步打印`eval loss`与累计`elapsed Xs`
   - 结束后保存：`checkpoints/last.pt`、`checkpoints/quantized.pt`、`checkpoints/train_time.txt`
+- 设备入参：
+  - `--device auto|cpu|cuda|gpu`
+  - 不传或 `auto`：优先使用 `cuda`，否则回退 `cpu`
+  - `cpu`：强制使用 CPU
+  - `cuda`/`gpu`：若本机不支持 CUDA 则报错
+  - 示例：`python -m src.train --device gpu`
+  
 
 ### 5. 推理验证（两条固定问题）
 
@@ -286,9 +293,4 @@ python -m src.infer --prompt "什么是注意力机制？" --ckpt checkpoints/qu
     - `tok = hf_hub_download(repo_id='GPTcn/GPT_teacher-3.37M-cn', filename='tokenizer.json')`
     - `cfg = hf_hub_download(repo_id='GPTcn/GPT_teacher-3.37M-cn', filename='config.yaml')`
   - 使用方法：将 `pt` 拷贝到 `checkpoints/last.pt`，`tok` 到 `tokenizer/tokenizer.json`，`cfg` 到项目根；随后按上面的推理命令运行。
-- 设备入参：
-  - `--device auto|cpu|cuda|gpu`
-  - 不传或 `auto`：优先使用 `cuda`，否则回退 `cpu`
-  - `cpu`：强制使用 CPU
-  - `cuda`/`gpu`：若本机不支持 CUDA 则报错
-  - 示例：`python -m src.train --device gpu`
+
