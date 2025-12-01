@@ -1,4 +1,4 @@
-# GPT Teacher — 从 0 到 1 在 CPU 上训练可推理可演示的小参数中文GPT，实现中文GPT训练平民化，实现训练中文GPT自由
+# GPT Teacher — 从 0 到 1 在 CPU 上训练可推理可演示的小参数中文 GPT，实现中文 GPT 训练平民化，实现训练中文 GPT 自由
 
 本项目面向课堂教学，[目标是让初学者用一台普通 CPU 电脑，在 45 分钟内从零跑通一个小参数的中文 GPT](https://mp.weixin.qq.com/s/gUgY_TIRSoEyzZ2YRVGB2w)：看清核心流程、跑通训练、得到“可用的中文回答”，并支持简单的推理演示。
 
@@ -81,7 +81,7 @@ python -m src.build_tokenizer
   - `tokenizer.path: tokenizer/tokenizer.json`
   - `training.max_steps: 1500–2000`（课堂机器允许的话）
 
-### 4. 训练（仅 CPU）
+### 4. 训练（CPU/GPU）
 
 ```bash
 python -m src.train
@@ -269,6 +269,7 @@ python -m src.infer --prompt "什么是注意力机制？" --ckpt checkpoints/qu
   - 参见 `huggingface_hub` 的 `upload_file`/`upload_folder` 接口，适合脚本化批量上传。
 
 ## Hugging Face 使用指引（下载并在本项目推理）
+
 - 仓库地址：`https://huggingface.co/GPTcn/GPT_teacher-3.37M-cn`
 - 方式一：Git LFS 克隆
   - `git lfs install`
@@ -285,3 +286,9 @@ python -m src.infer --prompt "什么是注意力机制？" --ckpt checkpoints/qu
     - `tok = hf_hub_download(repo_id='GPTcn/GPT_teacher-3.37M-cn', filename='tokenizer.json')`
     - `cfg = hf_hub_download(repo_id='GPTcn/GPT_teacher-3.37M-cn', filename='config.yaml')`
   - 使用方法：将 `pt` 拷贝到 `checkpoints/last.pt`，`tok` 到 `tokenizer/tokenizer.json`，`cfg` 到项目根；随后按上面的推理命令运行。
+- 设备入参：
+  - `--device auto|cpu|cuda|gpu`
+  - 不传或 `auto`：优先使用 `cuda`，否则回退 `cpu`
+  - `cpu`：强制使用 CPU
+  - `cuda`/`gpu`：若本机不支持 CUDA 则报错
+  - 示例：`python -m src.train --device gpu`
