@@ -36,23 +36,4 @@ def load_tokenizer(kind: str = "byte", path: Optional[str] = None):
             return _Tok(tok)
         except Exception:
             pass
-    if kind == "sentencepiece" and path and os.path.exists(path):
-        import sentencepiece as spm
-        sp = spm.SentencePieceProcessor(model_file=path)
-        class _SPM:
-            def __init__(self, s):
-                self.s = s
-                self.vocab_size = s.get_piece_size()
-                self.bos_id = s.bos_id()
-                self.eos_id = s.eos_id()
-                self.pad_id = s.pad_id() if s.pad_id() >= 0 else self.eos_id
-                self.unk_id = s.unk_id() if hasattr(s, 'unk_id') else 0
-            def encode(self, text: str, add_special_tokens: bool = False) -> List[int]:
-                ids = self.s.encode(text, out_type=int)
-                if add_special_tokens:
-                    return [self.bos_id] + ids + [self.eos_id]
-                return ids
-            def decode(self, ids: List[int]) -> str:
-                return self.s.decode(ids)
-        return _SPM(sp)
     return ByteTokenizer()
