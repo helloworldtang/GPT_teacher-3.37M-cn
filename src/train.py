@@ -25,9 +25,7 @@ def get_device(want: str | None = None):
         )
     if want == "cpu":
         return torch.device("cpu")
-    raise RuntimeError(
-        f"Unknown device option: {want}", " Available options: auto, cpu, cuda"
-    )
+    raise RuntimeError(f"Unknown device option: {want}. Available options: auto, cpu")
 
 
 def train(device_arg: str | None = None):
@@ -146,8 +144,6 @@ def evaluate(model, loader, loss_fn, device):
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument(
-        "--device", type=str, default="auto", choices=["auto", "cuda", "gpu", "cpu"]
-    )
+    ap.add_argument("--device", type=str, default="auto", choices=["auto", "cpu"])
     args = ap.parse_args()
     train(args.device)
