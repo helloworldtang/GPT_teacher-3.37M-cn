@@ -18,22 +18,16 @@ def load_config(path):
         return yaml.safe_load(f)
 
 
-def get_device(cfg=None, want: str | None = None):
-    if want is None and isinstance(cfg, dict):
-        want = cfg.get("training", {}).get("device")
-    if want == "gpu":
-        want = "cuda"
-    if want == "cuda":
-        if torch.cuda.is_available():
-            return torch.device("cuda")
-        raise RuntimeError("Requested CUDA device but CUDA is not available")
+def get_device(want: str | None = None):
+    if want is None or want == "auto":
+        return (
+            torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
+        )
     if want == "cpu":
         return torch.device("cpu")
-    if want in (None, "auto"):
-        if torch.cuda.is_available():
-            return torch.device("cuda")
-        return torch.device("cpu")
-    raise RuntimeError(f"Unknown device option: {want}")
+    raise RuntimeError(
+        f"Unknown device option: {want}", " Available options: auto, cpu, cuda"
+    )
 
 
 def train(device_arg: str | None = None):
@@ -50,7 +44,7 @@ def train(device_arg: str | None = None):
         seq_len=seq_len,
         dropout=cfg["model"]["dropout"],
     )
-    device = get_device(cfg, device_arg)
+    device = get_device(device_arg)
     model.to(device)
     bs = cfg["training"]["batch_size"]
     mb = cfg["training"]["micro_batch"]
