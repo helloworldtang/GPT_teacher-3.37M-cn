@@ -60,7 +60,7 @@
 
 ## 从 0 到 1：一步步跑通
 
-依赖Python，没有需要安装。Python 3.11.10是可以跑通的。
+依赖 Python，没有需要安装。Python 3.11.10 是可以跑通的。
 
 ### 1. 安装依赖
 
@@ -102,11 +102,11 @@ python -m src.train
 ### 5. 推理验证（两条固定问题）
 
 ```bash
-# Question1
-python -m src.infer --prompt "什么是注意力机制？" --ckpt checkpoints/last.pt --temperature 0.0 --show_label
+# Question1（设备自动选择：有 CUDA 用 CUDA，否则 CPU）
+python -m src.infer --prompt "什么是注意力机制？" --ckpt checkpoints/last.pt --temperature 0.0 --show_label --device auto
 
-# Question2
-python -m src.infer --prompt "解释蒸馏水与纯水区别？" --ckpt checkpoints/last.pt --temperature 0.0 --show_label
+# Question2（强制 CPU）
+python -m src.infer --prompt "解释蒸馏水与纯水区别？" --ckpt checkpoints/last.pt --temperature 0.0 --show_label --device cpu
 ```
 
 - 期望结果（示例）：
@@ -118,10 +118,10 @@ python -m src.infer --prompt "解释蒸馏水与纯水区别？" --ckpt checkpoi
 python -m src.infer --prompt "什么是注意力机制？" --stop_strings "。" "；" "\n" --temperature 0.0 --show_label
 ```
 
-### 6.（可选）量化权重推理
+### 6.（可选）量化权重推理（仅 CPU）
 
 ```bash
-python -m src.infer --prompt "什么是注意力机制？" --ckpt checkpoints/quantized.pt --temperature 0.0 --show_label
+python -m src.infer --prompt "什么是注意力机制？" --ckpt checkpoints/quantized.pt --temperature 0.0 --show_label --device cpu
 ```
 
 ## 核心代码参考（行号）

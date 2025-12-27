@@ -29,12 +29,12 @@ def _trim_leading_punct(s: str) -> str:
         i += 1
     return s[i:]
 
-def generate(model, tok, prompt, max_new_tokens=64, temperature=1.0, top_k=0, top_p=1.0, repetition_penalty: float = 1.0, stop_strings=None, min_tokens: int = 5):
+def generate(model, tok, prompt, max_new_tokens=64, temperature=1.0, top_k=0, top_p=1.0, repetition_penalty: float = 1.0, stop_strings=None, min_tokens: int = 5, device=None):
     model.eval()
     # normalize prompt: collapse or remove spaces commonly inserted in Chinese
     norm = prompt.replace(" ", "").replace("\u3000", "")
     prefix = tok.encode("用户:" + norm + "\n助手:", add_special_tokens=True)
-    x = torch.tensor(prefix, dtype=torch.long).unsqueeze(0)
+    x = torch.tensor(prefix, dtype=torch.long, device=device).unsqueeze(0)
     recent = []
     with torch.no_grad():
         for step in range(max_new_tokens):
@@ -95,6 +95,7 @@ def main():
     ap.add_argument("--repetition_penalty", type=float, default=1.0)
     ap.add_argument("--stop_strings", nargs='*', default=None)
     ap.add_argument("--show_label", action="store_true")
+    ap.add_argument("--device", type=str, default="auto", choices=["auto", "cpu"]) 
     args = ap.parse_args()
     obj = load_checkpoint(args.ckpt)
     cfg = obj["cfg"]
@@ -110,9 +111,13 @@ def main():
     sd = obj["model"]
     packed = any("_packed_params" in k for k in sd.keys())
     if packed:
+        device = torch.device("cpu")
         m = torch.quantization.quantize_dynamic(m, {torch.nn.Linear}, dtype=torch.qint8)
+    else:
+        device = torch.device("cuda") if (args.device == "auto" and torch.cuda.is_available()) else torch.device("cpu")
     m.load_state_dict(sd)
-    text = generate(m, tok, args.prompt, args.max_new_tokens, args.temperature, args.top_k, args.top_p, args.repetition_penalty, args.stop_strings)
+    m.to(device)
+    text = generate(m, tok, args.prompt, args.max_new_tokens, args.temperature, args.top_k, args.top_p, args.repetition_penalty, args.stop_strings, device=device)
     if args.show_label:
         print("回答:" + text)
     else:
