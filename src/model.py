@@ -163,15 +163,6 @@ class GPT(nn.Module):
         self.norm = RMSNorm(n_embd)
         self.head = nn.Linear(n_embd, vocab_size, bias=False)
         self.head.weight = self.tok_emb.weight
-        
-        actual_use_flash = use_flash and hasattr(F, 'scaled_dot_product_attention')
-        print(f"\n=== 模型配置 ===")
-        print(f"层数: {n_layer}")
-        print(f"头数: {n_head}")
-        print(f"嵌入维度: {n_embd}")
-        print(f"序列长度: {seq_len}")
-        print(f"Flash Attention: {'启用' if actual_use_flash else '禁用'}")
-        print("=================\n")
     
     def forward(self, idx):
         B, T = idx.shape

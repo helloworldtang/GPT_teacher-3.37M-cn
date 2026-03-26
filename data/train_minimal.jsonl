@@ -1,0 +1,3 @@
+{"prompt": "什么是注意力机制？", "completion": "注意力让模型关注重点。"}
+{"prompt": "什么是位置编码？", "completion": "位置编码添加位置信息。"}
+{"prompt": "什么是学习率？", "completion": "学习率控制更新步长。"}

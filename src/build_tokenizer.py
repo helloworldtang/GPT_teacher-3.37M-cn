@@ -24,4 +24,4 @@ def build(train_path: str, save_path: str, vocab_size: int = 2048):
     tokenizer.save(save_path)
 
 if __name__ == "__main__":
-    build("data/train.jsonl", "tokenizer/tokenizer.json")
+    build("data/train_simple_6.jsonl", "tokenizer/tokenizer.json")
