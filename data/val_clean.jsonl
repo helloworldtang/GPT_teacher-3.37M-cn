@@ -1,3 +1,0 @@
-{"prompt": "什么是早停？", "completion": "早停防止过拟合。"}
-{"prompt": "如何节省训练时间？", "completion": "使用早停机制。"}
-{"prompt": "为什么需要早停？", "completion": "避免模型过拟合。"}

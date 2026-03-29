@@ -1,0 +1,45 @@
+[project]
+name = "gpt-teacher"
+version = "1.0.0"
+description = "GPT模型教学演示项目 - 从数据集到部署的完整流程"
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+license = { text = "MIT" }
+authors = [
+    { name = "GPT Teacher Team" }
+]
+keywords = ["gpt", "llm", "training", "education", "chinese"]
+
+dependencies = [
+    "torch>=2.2,<2.5",
+    "PyYAML>=6.0,<7.0",
+    "numpy>=1.24,<2.0",
+    "tokenizers>=0.15,<0.25",
+    "safetensors>=0.4.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "black>=23.0",
+    "ruff>=0.1.0",
+]
+
+[project.scripts]
+gpt-train = "src.train:main"
+gpt-infer = "src.infer:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.black]
+line-length = 120
+target-version = ["py310", "py311", "py312"]

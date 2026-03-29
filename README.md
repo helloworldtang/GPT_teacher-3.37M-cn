@@ -60,9 +60,24 @@
 
 ## 从 0 到 1：一步步跑通
 
-依赖 Python，没有需要安装。Python 3.11.10 是可以跑通的。
+依赖 Python 3.10-3.12。Python 3.11.10 是可以跑通的。
 
 ### 1. 安装依赖
+
+**推荐方式：使用 uv（更快、更稳定）**
+
+```bash
+# 安装 uv（如果未安装）
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 创建虚拟环境并安装依赖
+uv venv
+source .venv/bin/activate  # Linux/macOS
+# .venv\Scripts\activate   # Windows
+uv pip install -e .
+```
+
+**备选方式：使用 pip**
 
 ```bash
 python -m pip install -r requirements.txt
@@ -74,7 +89,21 @@ python -m pip install -r requirements.txt
 python -m src.build_tokenizer
 ```
 
-### 3. 配置核对
+### 3. 数据准备
+
+```bash
+# 当前训练数据：data/train.jsonl（约255条问答对）
+# 验证数据：data/val.jsonl（13条问答对）
+# 验收数据：data/test_acceptance.jsonl（10条测试问题）
+
+# 查看训练数据
+head -n 3 data/train.jsonl
+
+# 统计数据量
+wc -l data/train.jsonl data/val.jsonl data/test_acceptance.jsonl
+```
+
+### 4. 配置核对
 
 - `config.yaml` 中：
   - `data.train_path: data/train.jsonl`
@@ -83,7 +112,7 @@ python -m src.build_tokenizer
   - `tokenizer.path: tokenizer/tokenizer.json`
   - `training.max_steps: 1500–2000`（课堂机器允许的话）
 
-### 4. 训练（CPU/GPU）
+### 5. 训练（CPU/GPU）
 
 ```bash
 python -m src.train
@@ -99,26 +128,142 @@ python -m src.train
 - 其它显式值（如 `cuda`/`gpu`）将报错
 - 示例：`python -m src.train --device cpu`
 
-### 5. 推理验证（两条固定问题）
+### 6. 推理验证（验收测试集）
+
+#### 6.1 模型能力测试
+
+本项目的验收测试集包含10个测试问题，用于验证模型的三种能力：
+
+**目标1：逻辑自洽能力（训练集内问题）**
+验证模型能够准确回答训练集中的问题，问题和答案之间逻辑自洽。
+
+**目标2：推理能力**
+验证模型具有与训练集规模匹配的推理能力，能够理解并回答复杂问题。
+
+**目标3：泛化能力**
+验证模型具有一定的泛化能力，能够回答未在训练集中出现但相关的问题。
+
+**目标4：验收集不包含训练集重复case**
+验收测试集独立于训练集，避免过拟合。
+
+**目标5：非技术人员易懂**
+验收集中包含非技术人员也能理解的Q/A，便于评估模型实际可用性。
+
+#### 6.2 验收测试命令
 
 ```bash
-# Question1（设备自动选择：有 CUDA 用 CUDA，否则 CPU）
-python -m src.infer --prompt "什么是注意力机制？" --ckpt checkpoints/last.pt --temperature 0.0 --show_label --device auto
+# 训练集内测试（测试逻辑自洽、推理、泛化能力）
+python -m src.test_acceptance --ckpt checkpoints/last.pt --device auto --mode training
 
-# Question2（强制 CPU）
+# 验收数据集测试（测试泛化能力，非技术人员易懂问题）
+python -m src.test_acceptance --ckpt checkpoints/last.pt --device auto --mode acceptance
+
+# 单个问题测试（设备自动选择：有 CUDA 用 CUDA，否则 CPU）
+python -m src.infer --prompt "解释RoPE的作用" --ckpt checkpoints/last.pt --temperature 0.0 --show_label --device auto
+
+# 单个问题测试（强制 CPU）
 python -m src.infer --prompt "解释蒸馏水与纯水区别？" --ckpt checkpoints/last.pt --temperature 0.0 --show_label --device cpu
+python -m src.infer --prompt "什么是注意力机制？" --ckpt checkpoints/last.pt --temperature 0.0 --show_label --device cpu
+python -m src.infer --prompt "什么是栈？" --ckpt checkpoints/last.pt --temperature 0.0 --show_label --device cpu
+
 ```
 
-- 期望结果（示例）：
-  - Q1：`注意力机制通过分配权重让模型关注关键位置，从而更好地理解序列中的关系。`
-  - Q2：`蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。`
-- 若出现“串联两段”或冗长，可加入停止词：
+#### 6.3 验收测试问题及期望结果
 
+**逻辑自洽能力测试（训练集内问题）**：
+1. Q: `解释RoPE的作用`
+   - A: `RoPE把相对位置信息注入注意力，保留位序关系且高效。`
+
+2. Q: `解释蒸馏水与纯水区别？`
+   - A: `蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。`
+
+3. Q: `把下面句子改写更通俗：位置编码告诉模型词在句子中的顺序。`
+   - A: `让模型知道先后顺序，从而更好理解上下文。`
+
+4. Q: `什么是注意力机制？`
+   - A: `注意力通过分配权重让模型重点参考关键位置，提升对序列关系的理解。`
+
+5. Q: `什么是RMSNorm？`
+   - A: `RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。`
+
+**推理能力测试**：
+6. Q: `什么是栈？`
+   - A: `栈是一种后进先出(LIFO)的数据结构。比如叠盘子，最后放上去的先拿走。操作：push（入栈）和pop（出栈）。应用：函数调用栈、括号匹配、表达式求值、深度优先搜索。`
+
+7. Q: `如何将二进制转换为十进制？`
+   - A: `二进制转十进制：将每位数字乘以2的幂次然后求和。比如1011=1×2³+0×2²+1×2¹+1×2⁰=8+0+2+1=11。`
+
+8. Q: `什么是TCP三次握手？`
+   - A: `TCP建立连接需要三次握手：1.Client发送SYN（同步）2.Server回复SYN-ACK 3.Client发送ACK确认。三次是为了确认双方都能收发数据，防止已失效的连接请求突然又到达导致错误。`
+
+**泛化能力测试**：
+9. Q: `什么是Python的装饰器？`
+   - A: `装饰器是在不修改原函数的情况下，给函数增加新功能。语法：@decorator放在函数定义上，等价于func=decorator(func)。本质是一个接收函数作为参数的高阶函数。应用：日志、权限校验、缓存、计时。`
+
+10. Q: `如何提高小模型的课堂演示质量`
+    - A: `准备高质量小数据，控制训练步数，选择稳定推理参数并加简单后处理。`
+
+#### 6.4 验收数据集
+
+验收数据集保存在 `data/val_acceptance.jsonl`，包含10个非技术人员能看懂的Q/A对，**不包含训练集中的任何case**，用于测试模型的泛化能力。
+
+**验收数据集完整内容**：
+1. Q: `为什么人会发烧？`
+   - A: `发烧是身体对感染或炎症的反应。当免疫系统对抗细菌、病毒等病原体时，会释放物质让大脑调高体温，帮助抑制病原体生长，同时加速免疫反应。`
+
+2. Q: `为什么天空是蓝色的？`
+   - A: `阳光穿过大气层时，空气中的气体分子会散射光线。蓝光的波长短，比红光更容易被散射，所以我们看到的天空是蓝色的。`
+
+3. Q: `为什么夏天会热？`
+   - A: `夏天地球倾斜，阳光直射北半球，照射时间更长，角度更垂直，所以热量更多，温度更高。`
+
+4. Q: `为什么海水是咸的？`
+   - A: `海水中的盐分来自陆地岩石中的矿物质，被雨水和河流带入海洋。亿万年的积累加上海水蒸发留下盐分，使海水变咸。`
+
+5. Q: `为什么苹果切开后会变色？`
+   - A: `苹果切开暴露在空气中，细胞中的酚类物质与氧气反应产生褐色物质，这是氧化现象。可以用柠檬汁浸泡延缓变色。`
+
+6. Q: `为什么人会打哈欠？`
+   - A: `打哈欠可能是为了给大脑降温或增加氧气摄入，也可能是疲劳或无聊的信号，具有传染性。`
+
+7. Q: `为什么月亮会跟着人走？`
+   - A: `月亮离地球很远，相对距离变化很小。我们在移动时，近处的景物快速后退，但月亮看起来几乎不动，所以像在跟着走。`
+
+8. Q: `为什么树叶在秋天会变黄？`
+   - A: `秋天日照减少，树木停止生产叶绿素，叶绿素分解后，原本被遮挡的黄色素（类胡萝卜素）显现出来，树叶就变黄了。`
+
+9. Q: `为什么会有彩虹？`
+   - A: `雨后空气中有小水珠，阳光射入水珠时发生折射、反射和色散，把白光分解成七种颜色，形成彩虹。`
+
+10. Q: `为什么冰会浮在水面上？`
+    - A: `水的密度在4度最大，结冰时分子排列变松散，密度变小，所以冰的密度小于水，会浮在水面上。`
+
+#### 6.5 验收标准
+
+**训练集内测试（问题1-10）**：
+- **逻辑自洽能力**（问题1-5）：答案应与期望结果高度一致（关键信息匹配度≥90%）
+- **推理能力**（问题6-8）：答案应包含核心概念和关键步骤（关键信息匹配度≥80%）
+- **泛化能力**（问题9-10）：答案应合理且与问题相关（关键信息匹配度≥70%）
+
+**验收数据集测试（data/val_acceptance.jsonl）**：
+- 使用验收数据集进行完整的泛化能力测试
+- 所有10个问题的答案应合理、连贯且与问题相关
+- 至少7个问题（70%）的答案应包含核心概念或正确解释
+- 答案不能完全复制训练数据中的内容（避免记忆而非泛化）
+- **总体通过标准**：10个问题中至少8个问题通过关键信息匹配度≥80%的要求
+
+#### 6.5 推理参数优化建议
+
+- 若出现"串联两段"或冗长，可加入停止词：
 ```bash
 python -m src.infer --prompt "什么是注意力机制？" --stop_strings "。" "；" "\n" --temperature 0.0 --show_label
 ```
+- 若答案不够稳定，可调整top-p参数：
+```bash
+python -m src.infer --prompt "解释RoPE的作用" --temperature 0.0 --top_p 0.9 --show_label
+```
 
-### 6.（可选）量化权重推理（仅 CPU）
+### 7.（可选）量化权重推理（仅 CPU）
 
 ```bash
 python -m src.infer --prompt "什么是注意力机制？" --ckpt checkpoints/quantized.pt --temperature 0.0 --show_label --device cpu
@@ -294,3 +439,84 @@ python -m src.infer --prompt "什么是注意力机制？" --ckpt checkpoints/qu
     - `tok = hf_hub_download(repo_id='GPTcn/GPT_teacher-3.37M-cn', filename='tokenizer.json')`
     - `cfg = hf_hub_download(repo_id='GPTcn/GPT_teacher-3.37M-cn', filename='config.yaml')`
   - 使用方法：将 `pt` 拷贝到 `checkpoints/last.pt`，`tok` 到 `tokenizer/tokenizer.json`，`cfg` 到项目根；随后按上面的推理命令运行。
+
+## 生产环境部署指南
+
+### 权重格式选择
+
+| 格式 | 场景 | 安全性 | 加载速度 | 生态支持 |
+|------|------|--------|----------|----------|
+| `.pt` (PyTorch) | 训练/科研/调试 | ⚠️ pickle漏洞风险 | 一般 | PyTorch原生 |
+| `.safetensors` | **生产部署/公开分享** | ✅ 无反序列化风险 | 快 (mmap零拷贝) | HF生态标准 |
+| `.gguf` | 推理优化 (llama.cpp等) | ✅ 安全 | 极快 | 边缘设备部署 |
+
+### 为什么生产环境必须用 safetensors？
+
+1. **安全优先**：`.pt` 使用 Python pickle，存在任意代码执行漏洞。公开分享模型时，攻击者可植入恶意代码
+2. **加载更快**：safetensors 使用内存映射 (mmap)，无需完整加载即可开始推理
+3. **跨框架兼容**：被 Hugging Face、vLLM、TensorRT-LLM 等主流推理框架原生支持
+4. **行业趋势**：
+   - 短期：safetensors 是分发和部署的绝对主流，`.pt` 仅在训练/科研场景保留
+   - 长期：safetensors + GGUF 将成为模型分发的双核心格式
+
+### 转换为 safetensors 格式
+
+```bash
+# 安装依赖
+pip install safetensors
+
+# 转换 .pt 为 safetensors（同时导出配置）
+python -m src.export_safetensors --ckpt checkpoints/last.pt --output checkpoints/model.safetensors --include_config
+```
+
+输出文件：
+- `checkpoints/model.safetensors` - 模型权重
+- `checkpoints/model.json` - 模型配置（用于加载）
+
+### 使用 safetensors 推理
+
+```bash
+# 方式一：直接指定 .safetensors 文件
+python -m src.infer --prompt "什么是注意力机制？" --ckpt checkpoints/model.safetensors --temperature 0.0 --show_label
+
+# 方式二：Python API
+from safetensors.torch import load_file
+import torch
+
+state_dict = load_file("checkpoints/model.safetensors")
+model.load_state_dict(state_dict)
+```
+
+### Hugging Face Hub 部署建议
+
+公开分享模型时，推荐上传 safetensors 格式：
+
+```bash
+# 转换并上传
+python -m src.export_safetensors --ckpt checkpoints/last.pt --output model.safetensors --include_config
+
+# 上传到 HF Hub（会自动检测 safetensors 格式）
+huggingface-cli upload GPTcn/GPT_teacher-3.37M-cn model.safetensors .
+huggingface-cli upload GPTcn/GPT_teacher-3.37M-cn model.json .
+```
+
+### 边缘设备部署 (GGUF)
+
+如需在移动端或嵌入式设备部署，可转换为 GGUF 格式：
+
+```bash
+# 安装 llama.cpp
+git clone https://github.com/ggerganov/llama.cpp
+cd llama.cpp && make
+
+# 转换为 GGUF（需要先转成 HF 格式）
+python convert-hf-to-gguf.py /path/to/model --outtype q8_0 --outfile model.gguf
+```
+
+### 部署检查清单
+
+- [ ] 使用 `safetensors` 格式而非 `.pt`
+- [ ] 配置文件 (`model.json`) 与权重文件同目录
+- [ ] 分词器文件 (`tokenizer.json`) 已包含
+- [ ] 生产环境禁用 `temperature=0.0` 以外的随机采样（确保可复现）
+- [ ] 添加 API 层面的输入验证和输出过滤

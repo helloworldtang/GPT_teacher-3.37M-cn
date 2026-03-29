@@ -1,6 +1,0 @@
-{"prompt": "什么是注意力机制？", "completion": "注意力让模型关注重点。"}
-{"prompt": "如何让模型关注重点？", "completion": "使用注意力机制。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型能关注重要信息。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码添加位置信息。"}
-{"prompt": "模型怎么知道词的顺序？", "completion": "通过位置编码。"}
-{"prompt": "为什么位置编码重要？", "completion": "让模型理解词序关系。"}

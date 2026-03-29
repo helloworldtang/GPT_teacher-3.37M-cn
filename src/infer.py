@@ -1,4 +1,5 @@
 import os
+import json
 import argparse
 import warnings
 import torch
@@ -7,11 +8,27 @@ from .model import GPT
 from .data import build_datasets
 from .tokenizer import load_tokenizer
 
-# suppress specific noisy warnings from torch during quantized ckpt load
+try:
+    from safetensors.torch import load_file as load_safetensors
+    HAS_SAFETENSORS = True
+except ImportError:
+    HAS_SAFETENSORS = False
+
 warnings.filterwarnings("ignore", category=UserWarning, module="torch._utils")
 warnings.filterwarnings("ignore", message="TypedStorage is deprecated")
 
 def load_checkpoint(path):
+    if path.endswith(".safetensors"):
+        if not HAS_SAFETENSORS:
+            raise ImportError("请安装 safetensors: pip install safetensors")
+        state_dict = load_safetensors(path)
+        config_path = path.replace(".safetensors", ".json")
+        if os.path.exists(config_path):
+            with open(config_path, "r", encoding="utf-8") as f:
+                cfg = json.load(f)
+        else:
+            cfg = None
+        return {"model": state_dict, "cfg": cfg}
     return torch.load(path, map_location="cpu")
 
 PUNCT = set(list(",，。．、：:；;！!？?…"))
@@ -89,11 +106,11 @@ def main():
     ap.add_argument("--ckpt", type=str, default="checkpoints/last.pt")
     ap.add_argument("--prompt", type=str, required=True)
     ap.add_argument("--max_new_tokens", type=int, default=64)
-    ap.add_argument("--temperature", type=float, default=0.8)
+    ap.add_argument("--temperature", type=float, default=0.0)
     ap.add_argument("--top_k", type=int, default=0)
     ap.add_argument("--top_p", type=float, default=0.9)
     ap.add_argument("--repetition_penalty", type=float, default=1.0)
-    ap.add_argument("--stop_strings", nargs='*', default=None)
+    ap.add_argument("--stop_strings", nargs='*', default=["。", "；", "\n"])
     ap.add_argument("--show_label", action="store_true")
     ap.add_argument("--device", type=str, default="auto", choices=["auto", "cpu"]) 
     args = ap.parse_args()
