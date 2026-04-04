@@ -82,7 +82,7 @@ def main():
             max_new_tokens=128,
             temperature=args.temperature,
             top_p=args.top_p,
-            stop_strings=["\n"],
+            stop_strings=["。", "；", "\n"],
             device=device
         )
         
