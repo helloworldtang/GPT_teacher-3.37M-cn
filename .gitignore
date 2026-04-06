@@ -1,30 +1,55 @@
-# OS
-.DS_Store
-
 # Python
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
+*$py.class
+*.so
 .Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# Checkpoints and large artifacts
-# keep candidate/verify ignored; allow main checkpoints tracked
-checkpoints_candidate/*
-checkpoints_verify/*
-
-# Tokenizer temp files
-tokenizer/_spm_corpus.txt
-
-# Logs
-*.log
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
 
 # IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 
-# Local export folder for Hugging Face uploads
-hf_export/
+# Jupyter Notebook
+.ipynb_checkpoints
 
-# Trae local workspace artifacts
-.trae/
+# pyenv
+.python-version
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre
+.pyre/
+
+# Project specific
+checkpoints/
+logs/
+*.log
+.env
+.DS_Store

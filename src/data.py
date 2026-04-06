@@ -16,7 +16,7 @@ class InstructDataset(Dataset):
                 obj = json.loads(line)
                 prompt = obj.get("prompt", "")
                 completion = obj.get("completion", "")
-                prefix = self.tok.encode("用户:" + prompt + "\n助手:", add_special_tokens=True)
+                prefix = [self.tok.bos_id] + self.tok.encode("用户:" + prompt + "\n助手:", add_special_tokens=False)
                 comp = self.tok.encode(completion, add_special_tokens=False)
                 ids = prefix + comp + [self.tok.eos_id]
                 

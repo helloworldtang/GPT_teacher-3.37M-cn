@@ -163,7 +163,22 @@ class GPT(nn.Module):
         self.norm = RMSNorm(n_embd)
         self.head = nn.Linear(n_embd, vocab_size, bias=False)
         self.head.weight = self.tok_emb.weight
-    
+
+        # 初始化权重
+        self.apply(self._init_weights)
+        # 对 GPT-2 风格的残差投影进行特殊初始化
+        for pn, p in self.named_parameters():
+            if pn.endswith('proj.weight'):
+                torch.nn.init.normal_(p, mean=0.0, std=0.02/math.sqrt(2 * n_layer))
+
+    def _init_weights(self, module):
+        if isinstance(module, nn.Linear):
+            torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
+            if module.bias is not None:
+                torch.nn.init.zeros_(module.bias)
+        elif isinstance(module, nn.Embedding):
+            torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
+
     def forward(self, idx):
         B, T = idx.shape
         x = self.tok_emb(idx)

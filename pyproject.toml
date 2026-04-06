@@ -1,45 +1,56 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "gpt-teacher"
 version = "1.0.0"
-description = "GPT模型教学演示项目 - 从数据集到部署的完整流程"
-readme = "README.md"
-requires-python = ">=3.10,<3.13"
-license = { text = "MIT" }
+description = "A small-scale GPT model for teaching and demonstration"
 authors = [
-    { name = "GPT Teacher Team" }
+    {name = "GPT Teacher Team", email = "contact@gpt-teacher.ai"},
 ]
-keywords = ["gpt", "llm", "training", "education", "chinese"]
-
+license = {text = "MIT"}
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
 dependencies = [
-    "torch>=2.2,<2.5",
-    "PyYAML>=6.0,<7.0",
-    "numpy>=1.24,<2.0",
-    "tokenizers>=0.15,<0.25",
-    "safetensors>=0.4.0",
+    "torch>=1.12.0",
+    "tokenizers>=0.13.0",
+    "numpy>=1.21.0",
+    "pyyaml>=6.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=7.0",
-    "black>=23.0",
-    "ruff>=0.1.0",
+    "black>=22.0",
+    "flake8>=4.0",
+    "mypy>=0.950",
 ]
 
-[project.scripts]
-gpt-train = "src.train:main"
-gpt-infer = "src.infer:main"
+[project.urls]
+Homepage = "https://github.com/gpt-teacher/gpt-teacher"
+Documentation = "https://gpt-teacher.readthedocs.io"
+Repository = "https://github.com/gpt-teacher/gpt-teacher"
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[tool.hatch.build.targets.wheel]
-packages = ["src"]
-
-[tool.ruff]
-line-length = 120
-target-version = "py310"
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
 
 [tool.black]
-line-length = 120
-target-version = ["py310", "py311", "py312"]
+line-length = 100
+target-version = ['py38', 'py39', 'py310', 'py311']
+
+[tool.isort]
+profile = "black"
+line_length = 100

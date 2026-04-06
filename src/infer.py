@@ -50,7 +50,8 @@ def generate(model, tok, prompt, max_new_tokens=64, temperature=1.0, top_k=0, to
     model.eval()
     # normalize prompt: collapse or remove spaces commonly inserted in Chinese
     norm = prompt.replace(" ", "").replace("\u3000", "")
-    prefix = tok.encode("用户:" + norm + "\n助手:", add_special_tokens=True)
+    # 手动添加 BOS，不添加 EOS
+    prefix = [tok.bos_id] + tok.encode("用户:" + norm + "\n助手:", add_special_tokens=False)
     x = torch.tensor(prefix, dtype=torch.long, device=device).unsqueeze(0)
     recent = []
     with torch.no_grad():
@@ -103,6 +104,8 @@ def generate(model, tok, prompt, max_new_tokens=64, temperature=1.0, top_k=0, to
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument("--config", type=str, default="config/config.yml", help="配置文件路径")
+
     ap.add_argument("--ckpt", type=str, default="checkpoints/last.pt")
     ap.add_argument("--prompt", type=str, required=True)
     ap.add_argument("--max_new_tokens", type=int, default=64)

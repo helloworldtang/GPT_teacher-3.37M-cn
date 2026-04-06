@@ -1,0 +1,5 @@
+{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
+{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
+{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
+{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
+{"prompt": "计算5乘以5", "completion": "25"}
