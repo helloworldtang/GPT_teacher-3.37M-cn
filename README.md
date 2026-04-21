@@ -18,6 +18,7 @@
 - `src/build_tokenizer.py`：构建 HF ByteLevel BPE 中文分词器（带解码器，避免乱码）
 - `config.yaml`：统一管理模型、训练、数据、分词器与保存路径
 - `data/*.jsonl`：教学数据（`{"prompt": "...", "completion": "..."}`）
+- `web_ui.py`：🆕 基于 Gradio 的 Web 图形化交互界面，支持直观的参数调节与对话演示
 
 ## 使用技术
 
@@ -123,6 +124,17 @@ python -m src.infer --prompt "什么是注意力机制？" --stop_strings "。" 
 ```bash
 python -m src.infer --prompt "什么是注意力机制？" --ckpt checkpoints/quantized.pt --temperature 0.0 --show_label --device cpu
 ```
+
+### 7. 🆕 Web GUI 图形化交互演示（推荐）
+
+如果你觉得命令行太枯燥，项目提供了一个类似 ChatGPT 的网页交互界面，非常适合课堂演示。
+
+- 启动GUI服务：
+```bash
+python web_ui.py
+```
+
+- 运行后，终端会输出一个本地链接（通常为 http://127.0.0.1:7860）
 
 ## 核心代码参考（行号）
 
