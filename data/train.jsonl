@@ -1,444 +1,600 @@
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "计算5乘以5", "completion": "25"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "计算10+12", "completion": "22"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "计算5乘以5", "completion": "25"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "解释RoPE的作用", "completion": "RoPE把相对位置信息注入注意力，保留位序关系且高效。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "什么是注意力机制？", "completion": "注意力通过分配权重让模型关注重点，提升对序列理解。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "你是谁？", "completion": "我是由TangCheng训练的GPT演示模型。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "解释蒸馏水与纯水区别？", "completion": "蒸馏水是通过蒸馏获得的水，去除了大部分杂质；纯水是指杂质含量极低的水，制备方式可以是蒸馏、反渗透等。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "什么是位置编码？", "completion": "位置编码为Transformer提供序列中词的顺序信息。"}
-{"prompt": "计算10+12", "completion": "22"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "为什么需要注意力？", "completion": "为了让模型在处理长序列时能动态关注最相关的部分。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "什么是TurboQuant？", "completion": "谷歌提出的KV缓存压缩算法，通过量化减少推理内存。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
+{"prompt": "你知道什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "请问RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "请问什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "你知道15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "帮我解释下RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "请问RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "你知道什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "帮我解释下什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "你知道太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "讲一下旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "请问15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "你知道权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "请问RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "解释一下 RoPE", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "解释一下 RoPE", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "能说下旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "讲一下蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "你知道什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "你知道你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "请问15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "你知道RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "帮我解释下RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "能说下什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "讲一下什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "你知道什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "你知道太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "帮我解释下什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "你知道15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "你知道太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "解释一下 RoPE", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "讲一下RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "讲一下太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "你知道权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "帮我解释下什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "讲一下RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "讲一下RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "讲一下蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "请问RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "讲一下什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "你知道15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "讲一下太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "讲一下RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "帮我解释下你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "请问RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "能说下什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "你知道太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "你知道什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "你知道你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "你知道RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "帮我解释下125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "你知道权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "帮我解释下125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "请问RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "你知道RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "你知道权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "你知道什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "讲一下太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "帮我解释下RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "讲一下解释一下 RoPE？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "你知道解释一下 RoPE？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "请问权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "讲一下什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "你知道权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "讲一下旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "能说下旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "能说下125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "你知道解释一下 RoPE？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "你知道权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "讲一下旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "请问15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "能说下125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "请问RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "讲一下RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "能说下蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "讲一下什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "请问RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "你知道解释一下 RoPE？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "你知道解释一下 RoPE？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "你知道15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "帮我解释下RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "能说下蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "帮我解释下RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "你知道权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "能说下蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "你知道太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "能说下旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "能说下旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "帮我解释下你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "你知道太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "能说下旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "讲一下解释一下 RoPE？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "请问什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "能说下125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "帮我解释下什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "请问15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "你知道15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "请问权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "请问什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "你知道什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "你知道15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "请问15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "讲一下什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "你知道什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "讲一下什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "讲一下什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "帮我解释下RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "讲一下RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "你知道你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "讲一下RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "你知道太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "讲一下RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "请问权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "帮我解释下RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "讲一下RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "请问RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "能说下蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "讲一下RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "能说下旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "讲一下什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "请问权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "请问15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "请问什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "讲一下旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "讲一下解释一下 RoPE？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "你知道什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "能说下蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "能说下125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "请问RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "能说下蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "你知道什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "请问权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "帮我解释下什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "你知道15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "请问RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "讲一下什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "请问RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "你知道什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "你知道什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "讲一下解释一下 RoPE？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "帮我解释下你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "讲一下什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "帮我解释下什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "你知道你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "能说下什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "你知道你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "帮我解释下125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "解释一下 RoPE", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "你知道什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "帮我解释下RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "你知道太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "请问RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "请问什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "你知道你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "讲一下旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "讲一下旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "你知道RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "你知道权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "请问什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "请问RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "讲一下什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "你知道RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "能说下蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "帮我解释下125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "请问什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "你知道RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "你知道什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "讲一下RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "你知道解释一下 RoPE？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "帮我解释下你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "能说下旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "你知道什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "请问权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "能说下什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "请问什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "你知道RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "能说下125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "讲一下什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "解释一下 RoPE", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "讲一下RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "讲一下什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "你知道解释一下 RoPE？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "请问什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "请问什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "请问RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "请问什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "帮我解释下你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "帮我解释下你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "帮我解释下125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "请问什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "你知道解释一下 RoPE？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "你知道什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "能说下什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "能说下什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "讲一下太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "能说下125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "能说下什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "讲一下太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "能说下什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "你知道你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "讲一下什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "讲一下太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "讲一下蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "能说下蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "请问什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "你知道解释一下 RoPE？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "讲一下RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "讲一下解释一下 RoPE？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "请问15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "帮我解释下你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "能说下旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "帮我解释下你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "请问15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "请问权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "讲一下太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "讲一下解释一下 RoPE？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "能说下旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "你知道太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "讲一下旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "请问RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "讲一下什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "请问15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "帮我解释下RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "请问15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "你知道什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "讲一下什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "讲一下什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "讲一下蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "请问什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "帮我解释下125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "请问什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "帮我解释下125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "你知道什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "请问RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "帮我解释下什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "请问什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "你知道权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "讲一下什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "你知道什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "请问什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "讲一下RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "帮我解释下你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "请问什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "讲一下蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "帮我解释下什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "你知道你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "帮我解释下125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "你知道RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "你知道解释一下 RoPE？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "讲一下RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "你知道什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "你知道解释一下 RoPE？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "讲一下蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "讲一下解释一下 RoPE？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "能说下旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "请问15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "能说下旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "能说下蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "请问什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "帮我解释下什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "帮我解释下RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "讲一下RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "你知道15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "请问什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "讲一下旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "帮我解释下你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "能说下125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "讲一下什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "你知道解释一下 RoPE？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "解释一下 RoPE", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "讲一下蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "帮我解释下RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "能说下蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "请问权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "帮我解释下你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "请问RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "请问RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "请问RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "你知道什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "能说下什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "讲一下解释一下 RoPE？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "请问什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "你知道你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "讲一下旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "解释一下 RoPE", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "帮我解释下什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "帮我解释下RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "你知道太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "你知道你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "你知道什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "讲一下旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "帮我解释下什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "帮我解释下RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "你知道15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "解释一下 RoPE", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "讲一下解释一下 RoPE？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "讲一下蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "讲一下旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "讲一下RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "帮我解释下RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "解释一下 RoPE", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "帮我解释下什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "讲一下旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "解释一下 RoPE", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "讲一下解释一下 RoPE？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "讲一下什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "讲一下RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "你知道什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "讲一下RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "解释一下 RoPE", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "请问RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "能说下什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "能说下什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "讲一下RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "请问RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "请问什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "你知道权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "能说下125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "讲一下什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "帮我解释下什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "你知道太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "请问RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "解释一下 RoPE", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "帮我解释下什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "你知道15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "你知道RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "帮我解释下125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "讲一下什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "你知道你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "讲一下什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "讲一下RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "能说下什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "你知道什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "你知道你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "请问RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "讲一下解释一下 RoPE？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "能说下蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "能说下什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "你知道什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "帮我解释下125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "请问RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "请问权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "你知道太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "帮我解释下你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "能说下125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "你知道RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "能说下125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "请问15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "帮我解释下125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "你知道你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "能说下蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "讲一下蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "讲一下蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "讲一下太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "能说下125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "讲一下蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "讲一下RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "你知道权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "讲一下什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "你知道解释一下 RoPE？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "讲一下蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "请问权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "你知道什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "请问15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "你知道权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "能说下旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "请问RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "你知道RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "讲一下解释一下 RoPE？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "讲一下RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "能说下125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "讲一下太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "请问RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "你知道太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "讲一下什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "请问权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "讲一下RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "帮我解释下你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "你知道什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "请问什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "请问什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "请问什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "能说下蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "能说下蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "帮我解释下你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "请问权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "你知道15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
+{"prompt": "权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "帮我解释下125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "讲一下RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "讲一下解释一下 RoPE？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "讲一下解释一下 RoPE？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "你知道解释一下 RoPE？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "能说下旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "你知道太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "讲一下旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "解释一下 RoPE", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "你知道RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "讲一下什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "请问15 乘以 6 等于多少？", "completion": "15 乘以 2 是 30，30 乘以 3 是 90，所以等于 90。"}
+{"prompt": "你知道RoPE 是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "请问什么是因果掩码？", "completion": "下三角矩阵，把未来位置权重设为负无穷，确保模型只看到历史信息。"}
+{"prompt": "旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "帮我解释下125 除以 5 是多少？", "completion": "100 除以 5 是 20，25 除以 5 是 5，20 加 5 等于 25。"}
+{"prompt": "太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "你知道什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
+{"prompt": "旋转位置编码是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "RoPE 的全称是什么？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "你知道你是谁？", "completion": "我是一个基于 Transformer 的小型 GPT 教学演示模型。"}
+{"prompt": "帮我解释下什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
+{"prompt": "你知道解释一下 RoPE？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "讲一下太阳系有哪些行星？", "completion": "八大行星：水星、金星、地球、火星、木星、土星、天王星、海王星。"}
+{"prompt": "RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "你知道解释一下 RoPE？", "completion": "RoPE 是旋转位置编码，通过复数旋转注入相对位置信息。"}
+{"prompt": "权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "请问权重共享有什么好处？", "completion": "嵌入层和输出层共用参数，减少模型体积并保持输入输出语义一致。"}
+{"prompt": "讲一下RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
+{"prompt": "请问什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
+{"prompt": "你知道什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}

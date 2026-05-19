@@ -11,7 +11,7 @@ authors = [
 ]
 license = {text = "MIT"}
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10,<3.13"
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -28,6 +28,10 @@ dependencies = [
     "tokenizers>=0.13.0",
     "numpy>=1.21.0",
     "pyyaml>=6.0",
+    "gradio>=4.0.0",
+    "huggingface_hub<0.25.0",
+    "matplotlib>=3.5.0",
+    "tqdm>=4.60.0",
 ]
 
 [project.optional-dependencies]

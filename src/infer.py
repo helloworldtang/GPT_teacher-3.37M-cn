@@ -29,7 +29,7 @@ def load_checkpoint(path):
         else:
             cfg = None
         return {"model": state_dict, "cfg": cfg}
-    return torch.load(path, map_location="cpu")
+    return torch.load(path, map_location="cpu", weights_only=False)
 
 PUNCT = set(list(",，。．、：:；;！!？?…"))
 
@@ -53,43 +53,61 @@ def generate(model, tok, prompt, max_new_tokens=64, temperature=1.0, top_k=0, to
     # 手动添加 BOS，不添加 EOS
     prefix = [tok.bos_id] + tok.encode("用户:" + norm + "\n助手:", add_special_tokens=False)
     x = torch.tensor(prefix, dtype=torch.long, device=device).unsqueeze(0)
+    
     recent = []
+    kv_caches = None
+    
     with torch.no_grad():
         for step in range(max_new_tokens):
-            logits = model(x)
-            logits = logits[:, -1, :] / max(1e-6, temperature)
+            # 推理优化：如果是第一步，输入全量 prefix；后续步仅输入上一个生成的 token + KV Cache
+            if step == 0:
+                cur_input = x
+            else:
+                cur_input = x[:, -1:]
+            
+            logits, kv_caches = model(cur_input, kv_caches=kv_caches)
+            logits = logits[:, -1, :] / max(1e-6, temperature if temperature > 0 else 1.0)
+            
+            # 基础屏蔽逻辑：无论温度如何都生效
             if hasattr(tok, 'pad_id') and tok.pad_id is not None and tok.pad_id >= 0:
                 logits[0, tok.pad_id] = -float('inf')
             if hasattr(tok, 'bos_id') and tok.bos_id is not None and tok.bos_id >= 0:
                 logits[0, tok.bos_id] = -float('inf')
             if hasattr(tok, 'unk_id') and tok.unk_id is not None and tok.unk_id >= 0:
                 logits[0, tok.unk_id] = -float('inf')
-            if step == 0 and hasattr(tok, 'eos_id') and tok.eos_id is not None and tok.eos_id >= 0:
-                logits[0, tok.eos_id] = -float('inf')
-            if repetition_penalty > 1.0 and len(recent) > 0:
-                for tid in recent[-16:]:
-                    logits[0, tid] = logits[0, tid] / repetition_penalty
+            
+            # 强制最小生成长度，防止秒断
             if step < min_tokens and hasattr(tok, 'eos_id') and tok.eos_id is not None and tok.eos_id >= 0:
                 logits[0, tok.eos_id] = -float('inf')
-            probs = torch.softmax(logits, dim=-1)
-            if top_k > 0:
-                v, i = torch.topk(probs, top_k)
-                p = torch.zeros_like(probs).scatter_(1, i, v)
-                s = p.sum(dim=-1, keepdim=True)
-                probs = torch.where(s > 0, p / s, probs)
-            if top_p < 1.0:
-                srt, idx = torch.sort(probs, descending=True)
-                c = torch.cumsum(srt, dim=-1)
-                m = c <= top_p
-                srt = srt * m
-                p = torch.zeros_like(probs).scatter_(1, idx, srt)
-                s = p.sum(dim=-1, keepdim=True)
-                probs = torch.where(s > 0, p / s, probs)
-            probs = torch.nan_to_num(probs, nan=0.0, posinf=0.0, neginf=0.0)
-            if probs.sum() == 0:
+
+            # 重复惩罚：无论 greedy 还是采样都生效
+            if repetition_penalty > 1.0 and len(recent) > 0:
+                for tid in recent[-32:]:
+                    logits[0, tid] = logits[0, tid] / repetition_penalty
+
+            if temperature <= 0:
                 next_id = torch.argmax(logits, dim=-1, keepdim=True)
             else:
-                next_id = torch.multinomial(probs, 1)
+                probs = torch.softmax(logits, dim=-1)
+                if top_k > 0:
+                    v, i = torch.topk(probs, top_k)
+                    p = torch.zeros_like(probs).scatter_(1, i, v)
+                    s = p.sum(dim=-1, keepdim=True)
+                    probs = torch.where(s > 0, p / s, probs)
+                if top_p < 1.0:
+                    srt, idx = torch.sort(probs, descending=True)
+                    c = torch.cumsum(srt, dim=-1)
+                    m = c <= top_p
+                    srt = srt * m
+                    p = torch.zeros_like(probs).scatter_(1, idx, srt)
+                    s = p.sum(dim=-1, keepdim=True)
+                    probs = torch.where(s > 0, p / s, probs)
+                probs = torch.nan_to_num(probs, nan=0.0, posinf=0.0, neginf=0.0)
+                if probs.sum() == 0:
+                    next_id = torch.argmax(logits, dim=-1, keepdim=True)
+                else:
+                    next_id = torch.multinomial(probs, 1)
+            
             x = torch.cat([x, next_id], dim=1)
             recent.append(next_id.item())
             if next_id.item() == tok.eos_id:
@@ -112,8 +130,8 @@ def main():
     ap.add_argument("--temperature", type=float, default=0.0)
     ap.add_argument("--top_k", type=int, default=0)
     ap.add_argument("--top_p", type=float, default=0.9)
-    ap.add_argument("--repetition_penalty", type=float, default=1.0)
-    ap.add_argument("--stop_strings", nargs='*', default=["。", "；", "\n"])
+    ap.add_argument("--repetition_penalty", type=float, default=1.5)
+    ap.add_argument("--stop_strings", nargs='*', default=[])
     ap.add_argument("--show_label", action="store_true")
     ap.add_argument("--device", type=str, default="auto", choices=["auto", "cpu"]) 
     args = ap.parse_args()
@@ -127,7 +145,8 @@ def main():
         n_embd=cfg["model"]["n_embd"],
         seq_len=cfg["model"]["seq_len"],
         dropout=cfg["model"]["dropout"],
-        use_flash=False,  # 推理时禁用 Flash Attention
+        use_flash=False,
+        n_kv_head=cfg["model"].get("n_kv_head"),
     )
     sd = obj["model"]
     packed = any("_packed_params" in k for k in sd.keys())
@@ -138,6 +157,9 @@ def main():
         device = torch.device("cuda") if (args.device == "auto" and torch.cuda.is_available()) else torch.device("cpu")
     m.load_state_dict(sd)
     m.to(device)
+    
+    # 预热推理逻辑
+    print("--- 模型推理结果 ---")
     text = generate(m, tok, args.prompt, args.max_new_tokens, args.temperature, args.top_k, args.top_p, args.repetition_penalty, args.stop_strings, device=device)
     if args.show_label:
         print("回答:" + text)

@@ -1,5 +1,6 @@
-{"prompt": "什么是动态量化？", "completion": "动态量化在推理时将权重转为INT8，加速CPU计算并减小体积。"}
-{"prompt": "什么是梯度累积？", "completion": "梯度累积在受限内存下通过多次前向传播累积梯度，模拟大批次训练。"}
-{"prompt": "什么是RMSNorm？", "completion": "RMSNorm用均方根进行缩放，结构简单、计算更快，适合小模型。"}
-{"prompt": "TurboQuant如何工作？", "completion": "它对键值对(KV)进行低比特量化，从而在不显著损失精度的情况下节省显存。"}
-{"prompt": "计算5乘以5", "completion": "25"}
+{"prompt": "什么是注意力机制？", "completion": "注意力机制通过计算相关性分配权重。"}
+{"prompt": "RoPE 是什么？", "completion": "旋转位置编码。"}
+{"prompt": "15 乘以 6 等于多少？", "completion": "90。"}
+{"prompt": "你是谁？", "completion": "GPT 教学演示模型。"}
+{"prompt": "太阳系有哪些行星？", "completion": "水星、金星、地球、火星等八大行星。"}
+{"prompt": "蒸馏水和纯水有什么区别？", "completion": "蒸馏水是冷凝制得，纯水杂质极低。"}
