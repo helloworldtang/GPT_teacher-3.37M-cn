@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Check imports
+        run: |
+          uv run python -c "
+          from src.model import GPT
+          from src.data import build_datasets
+          from src.tokenizer import load_tokenizer
+          from src.infer import generate
+          from src.evaluate import run_test
+          print('All imports OK')
+          "
+
+      - name: Generate training data
+        run: uv run python data/prepare_data.py
+
+      - name: Build tokenizer
+        run: uv run python -m src.build_tokenizer
+
+      - name: Quick training smoke test (50 steps)
+        run: uv run python -m src.train --max_steps 50 --device cpu
+        timeout-minutes: 10
+
+      - name: Run evaluation
+        run: uv run python -m src.evaluate --ckpt checkpoints/best.pt

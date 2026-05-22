@@ -53,3 +53,5 @@ logs/
 *.log
 .env
 .DS_Store
+flagged/
+.claude/

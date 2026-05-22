@@ -77,7 +77,7 @@ def plot_loss_curve(train_losses, val_losses, eval_interval, save_path):
     print(f"  Loss 曲线已保存: {save_path}")
 
 
-def train(device_arg: str | None = None, use_flash: bool = True, config_path: str | None = None):
+def train(device_arg: str | None = None, use_flash: bool = True, config_path: str | None = None, max_steps_override: int | None = None):
     if config_path is None:
         config_path = "config/config.yml"
     cfg = load_config(config_path)
@@ -126,7 +126,7 @@ def train(device_arg: str | None = None, use_flash: bool = True, config_path: st
         lr=cfg["training"]["lr"],
         weight_decay=cfg["training"]["weight_decay"],
     )
-    total_steps = cfg["training"]["max_steps"]
+    total_steps = max_steps_override if max_steps_override else cfg["training"]["max_steps"]
     warmup = cfg["training"]["warmup_steps"]
 
     def lr_lambda(step):
@@ -328,5 +328,6 @@ if __name__ == "__main__":
     ap.add_argument("--config", type=str, default="config/config.yml", help="配置文件路径")
     ap.add_argument("--device", type=str, default="auto", choices=["auto", "cpu", "cuda", "mps"], help="训练设备: auto(自动检测), cpu, cuda(GPU), mps(Apple M芯片)")
     ap.add_argument("--no-flash", action="store_true", help="禁用 Flash Attention")
+    ap.add_argument("--max_steps", type=int, default=None, help="覆盖配置文件中的训练步数")
     args = ap.parse_args()
-    train(args.device, use_flash=not args.no_flash, config_path=args.config)
+    train(args.device, use_flash=not args.no_flash, config_path=args.config, max_steps_override=args.max_steps)
