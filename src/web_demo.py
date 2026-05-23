@@ -2,6 +2,7 @@ import gradio as gr
 import torch
 import time
 import os
+from collections import Counter
 from src.model import GPT
 from src.tokenizer import load_tokenizer
 from src.infer import generate
@@ -46,19 +47,25 @@ def get_device():
     )
 
 
-def chat(prompt, temperature, top_k, top_p, max_tokens, repeat_penalty):
+def ensure_model():
     global model, tokenizer, device, model_info
     if model is None:
         if not os.path.exists(DEFAULT_CKPT):
-            return "错误：未找到模型文件 checkpoints/best.pt，请先运行训练。\n\n运行命令: uv run python -m src.train"
+            return False
         model, tokenizer, cfg = load_model(DEFAULT_CKPT)
         device = get_device()
         model.to(device)
         n_params = sum(p.numel() for p in model.parameters())
         model_info = f"模型: {n_params/1e6:.2f}M 参数 | 设备: {device}"
+    return True
+
+
+def chat(prompt, temperature, top_k, top_p, max_tokens, repeat_penalty):
+    if not ensure_model():
+        return "错误：未找到模型文件 checkpoints/best.pt，请先运行训练。\n\n运行命令: uv run python -m src.train", ""
 
     start = time.time()
-    response = generate(
+    result = generate(
         model, tokenizer, prompt,
         max_new_tokens=int(max_tokens),
         temperature=temperature,
@@ -67,9 +74,50 @@ def chat(prompt, temperature, top_k, top_p, max_tokens, repeat_penalty):
         repetition_penalty=repeat_penalty,
         stop_strings=["用户:", "\n用户", "。"],
         device=device,
+        return_confidence=True,
     )
     elapsed = time.time() - start
-    return f"{response}\n\n---\n推理耗时: {elapsed:.2f}s"
+    conf = result["avg_confidence"]
+    conf_label = "高" if conf > 0.8 else ("中" if conf > 0.5 else "低")
+    response = f"{result['text']}\n\n---\n推理耗时: {elapsed:.2f}s | 置信度: {conf:.0%} ({conf_label})"
+    return response, model_info
+
+
+def check_consistency(prompt, max_tokens, repeat_penalty):
+    if not ensure_model():
+        return "错误：模型未加载", ""
+
+    start = time.time()
+    n_samples = 5
+    results = []
+    for _ in range(n_samples):
+        r = generate(
+            model, tokenizer, prompt,
+            max_new_tokens=int(max_tokens),
+            temperature=0.5,
+            top_k=50,
+            top_p=0.9,
+            repetition_penalty=repeat_penalty,
+            stop_strings=["用户:", "\n用户", "。"],
+            device=device,
+        )
+        results.append(r)
+    elapsed = time.time() - start
+
+    counter = Counter(results)
+    most_common_text, most_common_count = counter.most_common(1)[0]
+    ratio = most_common_count / n_samples
+
+    if ratio >= 0.8:
+        verdict = f"自洽性: {most_common_count}/{n_samples} 次一致 (高可信度)"
+    elif ratio >= 0.5:
+        verdict = f"自洽性: {most_common_count}/{n_samples} 次一致 (中可信度)"
+    else:
+        verdict = f"自洽性: {most_common_count}/{n_samples} 次一致 (低可信度)"
+
+    detail = "\n".join(f"  第{i+1}次: {r}" for i, r in enumerate(results))
+    response = f"{most_common_text}\n\n---\n{verdict}\n检测耗时: {elapsed:.2f}s ({n_samples}次采样)\n\n所有回答:\n{detail}"
+    return response, model_info
 
 
 # 快捷问题
@@ -111,6 +159,7 @@ with gr.Blocks(
 
             with gr.Row():
                 submit_btn = gr.Button("提问", variant="primary")
+                consistency_btn = gr.Button("自洽性检测 (5次采样)")
                 clear_btn = gr.Button("清空")
 
         with gr.Column(scale=1):
@@ -148,28 +197,29 @@ with gr.Blocks(
     with gr.Row():
         for q in EXAMPLE_QUESTIONS[:4]:
             gr.Button(q, elem_classes="example-btn").click(
-                lambda x=q: (x, chat(x, 0.0, 50, 0.9, 128, 1.5)),
-                inputs=[], outputs=[input_box, output_box],
-            )
+                lambda x=q: chat(x, 0.0, 50, 0.9, 128, 1.5),
+                inputs=[], outputs=[output_box, model_info_box],
+            ).then(lambda x=q: x, inputs=[], outputs=[input_box])
     with gr.Row():
         for q in EXAMPLE_QUESTIONS[4:]:
             gr.Button(q, elem_classes="example-btn").click(
-                lambda x=q: (x, chat(x, 0.0, 50, 0.9, 128, 1.5)),
-                inputs=[], outputs=[input_box, output_box],
-            )
-
-    def chat_and_show_info(prompt, temperature, top_k, top_p, max_tokens, repeat_penalty):
-        result = chat(prompt, temperature, top_k, top_p, max_tokens, repeat_penalty)
-        return result, model_info
+                lambda x=q: chat(x, 0.0, 50, 0.9, 128, 1.5),
+                inputs=[], outputs=[output_box, model_info_box],
+            ).then(lambda x=q: x, inputs=[], outputs=[input_box])
 
     submit_btn.click(
-        chat_and_show_info,
+        chat,
         [input_box, temperature, top_k, top_p, max_tokens, repeat_penalty],
         [output_box, model_info_box],
     )
     input_box.submit(
-        chat_and_show_info,
+        chat,
         [input_box, temperature, top_k, top_p, max_tokens, repeat_penalty],
+        [output_box, model_info_box],
+    )
+    consistency_btn.click(
+        check_consistency,
+        [input_box, max_tokens, repeat_penalty],
         [output_box, model_info_box],
     )
     clear_btn.click(

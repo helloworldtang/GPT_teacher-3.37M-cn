@@ -46,17 +46,18 @@ def _trim_leading_punct(s: str) -> str:
         i += 1
     return s[i:]
 
-def generate(model, tok, prompt, max_new_tokens=64, temperature=1.0, top_k=0, top_p=1.0, repetition_penalty: float = 1.0, stop_strings=None, min_tokens: int = 5, device=None):
+def generate(model, tok, prompt, max_new_tokens=64, temperature=1.0, top_k=0, top_p=1.0, repetition_penalty: float = 1.0, stop_strings=None, min_tokens: int = 5, device=None, return_confidence=False):
     model.eval()
     # normalize prompt: collapse or remove spaces commonly inserted in Chinese
     norm = prompt.replace(" ", "").replace("\u3000", "")
     # 手动添加 BOS，不添加 EOS
     prefix = [tok.bos_id] + tok.encode("用户:" + norm + "\n助手:", add_special_tokens=False)
     x = torch.tensor(prefix, dtype=torch.long, device=device).unsqueeze(0)
-    
+
     recent = []
     kv_caches = None
-    
+    token_probs = []
+
     with torch.no_grad():
         for step in range(max_new_tokens):
             # 推理优化：如果是第一步，输入全量 prefix；后续步仅输入上一个生成的 token + KV Cache
@@ -64,10 +65,10 @@ def generate(model, tok, prompt, max_new_tokens=64, temperature=1.0, top_k=0, to
                 cur_input = x
             else:
                 cur_input = x[:, -1:]
-            
+
             logits, kv_caches = model(cur_input, kv_caches=kv_caches)
             logits = logits[:, -1, :] / max(1e-6, temperature if temperature > 0 else 1.0)
-            
+
             # 基础屏蔽逻辑：无论温度如何都生效
             if hasattr(tok, 'pad_id') and tok.pad_id is not None and tok.pad_id >= 0:
                 logits[0, tok.pad_id] = -float('inf')
@@ -75,7 +76,7 @@ def generate(model, tok, prompt, max_new_tokens=64, temperature=1.0, top_k=0, to
                 logits[0, tok.bos_id] = -float('inf')
             if hasattr(tok, 'unk_id') and tok.unk_id is not None and tok.unk_id >= 0:
                 logits[0, tok.unk_id] = -float('inf')
-            
+
             # 强制最小生成长度，防止秒断
             if step < min_tokens and hasattr(tok, 'eos_id') and tok.eos_id is not None and tok.eos_id >= 0:
                 logits[0, tok.eos_id] = -float('inf')
@@ -85,10 +86,13 @@ def generate(model, tok, prompt, max_new_tokens=64, temperature=1.0, top_k=0, to
                 for tid in recent[-32:]:
                     logits[0, tid] = logits[0, tid] / repetition_penalty
 
+            # 计算 softmax 概率（用于置信度）
+            all_probs = torch.softmax(logits, dim=-1)
+
             if temperature <= 0:
                 next_id = torch.argmax(logits, dim=-1, keepdim=True)
             else:
-                probs = torch.softmax(logits, dim=-1)
+                probs = all_probs.clone()
                 if top_k > 0:
                     v, i = torch.topk(probs, top_k)
                     p = torch.zeros_like(probs).scatter_(1, i, v)
@@ -107,7 +111,11 @@ def generate(model, tok, prompt, max_new_tokens=64, temperature=1.0, top_k=0, to
                     next_id = torch.argmax(logits, dim=-1, keepdim=True)
                 else:
                     next_id = torch.multinomial(probs, 1)
-            
+
+            # 收集置信度
+            if return_confidence:
+                token_probs.append(all_probs[0, next_id.item()].item())
+
             x = torch.cat([x, next_id], dim=1)
             recent.append(next_id.item())
             if next_id.item() == tok.eos_id:
@@ -118,7 +126,11 @@ def generate(model, tok, prompt, max_new_tokens=64, temperature=1.0, top_k=0, to
                 if any(out_text.endswith(ss) for ss in stop_strings):
                     break
     out_ids = x[0].tolist()[len(prefix):]
-    return _trim_leading_punct(tok.decode(out_ids))
+    text = _trim_leading_punct(tok.decode(out_ids))
+    if return_confidence:
+        avg_conf = sum(token_probs) / len(token_probs) if token_probs else 0.0
+        return {"text": text, "avg_confidence": avg_conf, "token_probs": token_probs}
+    return text
 
 def main():
     ap = argparse.ArgumentParser()
