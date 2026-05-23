@@ -75,13 +75,13 @@ def chat(prompt, temperature, top_k, top_p, max_tokens, repeat_penalty):
 # 快捷问题
 EXAMPLE_QUESTIONS = [
     "什么是注意力机制？",
-    "解释一下 RoPE 的作用",
-    "RMSNorm 和 LayerNorm 有什么区别？",
+    "RoPE 是什么？",
+    "什么是机器学习？",
     "计算 15 乘以 6 是多少？",
-    "你好，你是谁？",
+    "你是谁？",
     "太阳系有哪些行星？",
     "蒸馏水和纯水有什么区别？",
-    "什么是开源软件？",
+    "权重共享有什么好处？",
 ]
 
 with gr.Blocks(
@@ -180,6 +180,11 @@ with gr.Blocks(
 
 if __name__ == "__main__":
     import os
+    print("\n" + "=" * 50)
+    print("  GPT Teacher Web Demo 启动成功！")
+    print("  打开浏览器访问: http://127.0.0.1:7860")
+    print("  按 Ctrl+C 停止服务")
+    print("=" * 50 + "\n")
     demo.queue().launch(
         server_name=os.environ.get("SERVER_NAME", "127.0.0.1"),
         server_port=7860,
