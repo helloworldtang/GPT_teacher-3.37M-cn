@@ -7,19 +7,15 @@ from src.tokenizer import load_tokenizer
 from src.infer import generate
 
 
-def load_config(path):
-    with open(path, "r") as f:
-        import yaml
-        return yaml.safe_load(f)
 
-
-def load_model(ckpt_path, config_path):
-    cfg = load_config(config_path)
+def load_model(ckpt_path):
     checkpoint = torch.load(ckpt_path, map_location="cpu", weights_only=False)
-    if "cfg" in checkpoint:
-        cfg = checkpoint["cfg"]
+    cfg = checkpoint["cfg"]
 
-    tok = load_tokenizer(cfg["tokenizer"]["path"])
+    tok = load_tokenizer(
+        cfg.get("tokenizer", {}).get("type", "byte"),
+        cfg.get("tokenizer", {}).get("path"),
+    )
 
     model = GPT(
         vocab_size=tok.vocab_size,
@@ -36,11 +32,11 @@ def load_model(ckpt_path, config_path):
 
 
 DEFAULT_CKPT = "checkpoints/best.pt"
-DEFAULT_CONFIG = "config/config.yml"
 
 model = None
 tokenizer = None
 device = None
+model_info = ""
 
 
 def get_device():
@@ -50,23 +46,25 @@ def get_device():
     )
 
 
-def chat(prompt, temperature, top_k, top_p):
-    global model, tokenizer, device
+def chat(prompt, temperature, top_k, top_p, max_tokens, repeat_penalty):
+    global model, tokenizer, device, model_info
     if model is None:
         if not os.path.exists(DEFAULT_CKPT):
-            return "错误：未找到模型文件 checkpoints/best.pt，请先运行训练。\n\n运行命令: uv run python run.py"
-        model, tokenizer, _ = load_model(DEFAULT_CKPT, DEFAULT_CONFIG)
+            return "错误：未找到模型文件 checkpoints/best.pt，请先运行训练。\n\n运行命令: uv run python -m src.train"
+        model, tokenizer, cfg = load_model(DEFAULT_CKPT)
         device = get_device()
         model.to(device)
+        n_params = sum(p.numel() for p in model.parameters())
+        model_info = f"模型: {n_params/1e6:.2f}M 参数 | 设备: {device}"
 
     start = time.time()
     response = generate(
         model, tokenizer, prompt,
-        max_new_tokens=128,
+        max_new_tokens=int(max_tokens),
         temperature=temperature,
-        top_k=top_k,
+        top_k=int(top_k),
         top_p=top_p,
-        repetition_penalty=1.5,
+        repetition_penalty=repeat_penalty,
         stop_strings=["用户:", "\n用户", "。"],
         device=device,
     )
@@ -90,7 +88,6 @@ with gr.Blocks(
     title="GPT Teacher 教学演示",
     css="""
         .example-btn { min-width: 120px; margin: 4px; }
-        .param-info { font-size: 12px; color: #666; }
     """
 ) as demo:
 
@@ -118,38 +115,67 @@ with gr.Blocks(
 
         with gr.Column(scale=1):
             temperature = gr.Slider(
-                0.0, 1.0, value=0.0, step=0.1,
+                0.0, 1.5, value=0.0, step=0.1,
                 label="Temperature (温度)",
-                info="0=精确复制训练答案，1=更有创造性",
+                info="0=精确复制，1=有创造性",
             )
             top_k = gr.Slider(
                 1, 100, value=50, step=1,
                 label="Top-K",
-                info="只从概率最高的K个词中选，越小越确定",
+                info="只从概率最高的K个词中选",
             )
             top_p = gr.Slider(
                 0.0, 1.0, value=0.9, step=0.05,
                 label="Top-P (核采样)",
-                info="累积概率阈值，越小越保守",
+                info="累积概率阈值",
+            )
+            with gr.Accordion("高级参数", open=False):
+                max_tokens = gr.Slider(
+                    16, 256, value=128, step=16,
+                    label="Max Tokens (最大生成长度)",
+                    info="控制回答的最大长度",
+                )
+                repeat_penalty = gr.Slider(
+                    1.0, 2.0, value=1.5, step=0.1,
+                    label="Repetition Penalty (重复惩罚)",
+                    info="防止模型重复说同样的话",
+                )
+            model_info_box = gr.Markdown(
+                "模型尚未加载，点击「提问」自动加载"
             )
 
     gr.Markdown("### 点击试试这些问题")
     with gr.Row():
         for q in EXAMPLE_QUESTIONS[:4]:
             gr.Button(q, elem_classes="example-btn").click(
-                lambda x=q: (x, chat(x, 0.0, 50, 0.9)),
+                lambda x=q: (x, chat(x, 0.0, 50, 0.9, 128, 1.5)),
                 inputs=[], outputs=[input_box, output_box],
             )
     with gr.Row():
         for q in EXAMPLE_QUESTIONS[4:]:
             gr.Button(q, elem_classes="example-btn").click(
-                lambda x=q: (x, chat(x, 0.0, 50, 0.9)),
+                lambda x=q: (x, chat(x, 0.0, 50, 0.9, 128, 1.5)),
                 inputs=[], outputs=[input_box, output_box],
             )
 
-    submit_btn.click(chat, [input_box, temperature, top_k, top_p], output_box)
-    input_box.submit(chat, [input_box, temperature, top_k, top_p], output_box)
-    clear_btn.click(lambda: ("", ""), inputs=[], outputs=[input_box, output_box])
+    def chat_and_show_info(prompt, temperature, top_k, top_p, max_tokens, repeat_penalty):
+        result = chat(prompt, temperature, top_k, top_p, max_tokens, repeat_penalty)
+        return result, model_info
+
+    submit_btn.click(
+        chat_and_show_info,
+        [input_box, temperature, top_k, top_p, max_tokens, repeat_penalty],
+        [output_box, model_info_box],
+    )
+    input_box.submit(
+        chat_and_show_info,
+        [input_box, temperature, top_k, top_p, max_tokens, repeat_penalty],
+        [output_box, model_info_box],
+    )
+    clear_btn.click(
+        lambda: ("", "", model_info or "模型尚未加载，点击「提问」自动加载"),
+        inputs=[], outputs=[input_box, output_box, model_info_box],
+    )
 
 
 if __name__ == "__main__":
