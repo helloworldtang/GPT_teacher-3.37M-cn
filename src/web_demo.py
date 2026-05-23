@@ -153,8 +153,9 @@ with gr.Blocks(
 
 
 if __name__ == "__main__":
+    import os
     demo.queue().launch(
-        server_name="127.0.0.1",
+        server_name=os.environ.get("SERVER_NAME", "127.0.0.1"),
         server_port=7860,
         show_error=True,
         share=False,

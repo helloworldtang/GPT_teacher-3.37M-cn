@@ -12,7 +12,7 @@ checkpoints/loss_history.json
 checkpoints/train_time.txt
 docs/
 notebooks/
-scripts/
+scripts/push_to_hf.py
 flagged/
 *.egg-info/
 .DS_Store

@@ -12,13 +12,17 @@ COPY config/ config/
 COPY data/ data/
 COPY tokenizer/ tokenizer/
 COPY checkpoints/best.pt checkpoints/best.pt
-COPY run.py ./
+COPY scripts/docker_entrypoint.py docker_entrypoint.py
 
-# Install dependencies
-RUN uv sync --no-dev --frozen
+# Install dependencies, pin starlette<1.0 for Gradio 4.x compatibility
+RUN uv sync --no-dev --frozen && \
+    uv pip install "starlette<1.0.0"
 
 # Expose Gradio port
 EXPOSE 7860
 
-# Run web demo with pre-trained model
-CMD ["uv", "run", "python", "run.py", "--skip-train"]
+# Gradio in Docker: bind all interfaces
+ENV SERVER_NAME=0.0.0.0
+ENV GRADIO_ANALYTICS_ENABLED=false
+
+CMD ["/app/.venv/bin/python", "docker_entrypoint.py"]
