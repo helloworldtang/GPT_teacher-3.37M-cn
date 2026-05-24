@@ -39,13 +39,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 uv python install 3.11
 uv sync
 
-# Try the pre-trained model first (no training needed)
-uv run python -m src.evaluate
-
-# Launch web demo
-uv run python run.py --skip-train
-
-# Train your own model
+# Run the full pipeline: build tokenizer → train → evaluate → web demo
 uv run python run.py
 ```
 

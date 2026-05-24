@@ -116,7 +116,7 @@
 
 依赖 **Python 3.10-3.12**（torch 不支持 3.13+）。如果系统 Python 版本不对，uv 会自动处理，无需手动安装。
 
-### 方式一：先体验，再训练（推荐）
+### 方式一：一键跑通全流程（推荐）
 
 ```bash
 # 1. 安装 uv（如果未安装）
@@ -126,25 +126,11 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 uv python install 3.11
 uv sync
 
-# 2. 先用预训练模型体验效果（不用等训练）
-uv run python -m src.evaluate
-```
-
-**跑对了吗？** 应该看到 `结果: 5/6 通过 (83%)`。这就是闭环——模型真的学会了回答问题。
-
-```bash
-# 3. 启动 Web Demo，亲手试问
-uv run python run.py --skip-train
-```
-
-打开浏览器 http://127.0.0.1:7860 ，点击问题按钮体验。
-
-```bash
-# 4. 自己训练一个（才是真正的学习！）
+# 3. 一键跑通：构建分词器 → 训练 → 验收 → Web 演示
 uv run python run.py
 ```
 
-**跑对了吗？** 训练后再次运行验收，对比你自己训练的模型和预训练模型的效果。如果都通过了——恭喜，你从零训练了一个能用的 GPT。
+**跑对了吗？** 应该看到验收结果 `结果: 5/6 通过 (83%)` 以上，然后浏览器打开 http://127.0.0.1:7860 体验 Web Demo。
 
 ```bash
 # 指定设备
@@ -461,6 +447,7 @@ uv run python -m src.infer --prompt "解释RoPE的作用" --ckpt checkpoints/qua
 ## 常见问题与排查
 
 - **`uv sync` 报错 torch 不支持当前 Python 版本**：运行 `uv python install 3.11` 后重试。torch 只支持 Python 3.10-3.12
+- **`uv run python -m src.evaluate` 报错未找到模型文件**：需要先运行训练 `uv run python -m src.train`，训练完成后会自动验收
 - **`uv run python -m src.evaluate` 报错找不到模块**：先运行 `uv sync` 安装依赖
 - 乱码输出：确保已运行 `src/build_tokenizer.py`，且其设置了 `ByteLevel` 解码器；查看推理是否使用 HF 分词器路径
 - 空输出：提升步数（≥1500），并确认推理阶段首步屏蔽与停止词设置是否生效

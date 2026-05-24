@@ -11,7 +11,6 @@ COPY src/ src/
 COPY config/ config/
 COPY data/ data/
 COPY tokenizer/ tokenizer/
-COPY checkpoints/best.pt checkpoints/best.pt
 COPY scripts/docker_entrypoint.py docker_entrypoint.py
 
 # Install dependencies, pin starlette<1.0 for Gradio 4.x compatibility

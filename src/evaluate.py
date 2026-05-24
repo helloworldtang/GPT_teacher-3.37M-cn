@@ -1,4 +1,5 @@
 """验收测试：读取 test.jsonl，跑推理对比期望答案，输出 pass/fail 汇总。"""
+import os
 import json
 import torch
 from .model import GPT
@@ -7,6 +8,10 @@ from .infer import generate
 
 
 def load_model(ckpt_path="checkpoints/best.pt"):
+    if not os.path.exists(ckpt_path):
+        print(f"错误：未找到模型文件 {ckpt_path}")
+        print("请先运行训练：uv run python -m src.train")
+        raise SystemExit(1)
     checkpoint = torch.load(ckpt_path, map_location="cpu", weights_only=False)
     cfg = checkpoint["cfg"]
     tok = load_tokenizer(

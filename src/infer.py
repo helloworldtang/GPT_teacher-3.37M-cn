@@ -18,6 +18,10 @@ warnings.filterwarnings("ignore", category=UserWarning, module="torch._utils")
 warnings.filterwarnings("ignore", message="TypedStorage is deprecated")
 
 def load_checkpoint(path):
+    if not os.path.exists(path):
+        print(f"错误：未找到模型文件 {path}")
+        print("请先运行训练：uv run python -m src.train")
+        raise SystemExit(1)
     if path.endswith(".safetensors"):
         if not HAS_SAFETENSORS:
             raise ImportError("请安装 safetensors: pip install safetensors")
@@ -136,7 +140,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--config", type=str, default="config/config.yml", help="配置文件路径")
 
-    ap.add_argument("--ckpt", type=str, default="checkpoints/last.pt")
+    ap.add_argument("--ckpt", type=str, default="checkpoints/best.pt")
     ap.add_argument("--prompt", type=str, required=True)
     ap.add_argument("--max_new_tokens", type=int, default=64)
     ap.add_argument("--temperature", type=float, default=0.0)
