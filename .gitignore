@@ -55,3 +55,4 @@ logs/
 .DS_Store
 flagged/
 .claude/
+.mcp.json
