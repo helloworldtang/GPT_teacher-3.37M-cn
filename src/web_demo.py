@@ -1,4 +1,5 @@
 import gradio as gr
+import random
 import torch
 import time
 import os
@@ -6,6 +7,14 @@ from collections import Counter
 from src.model import GPT
 from src.tokenizer import load_tokenizer
 from src.infer import generate
+
+FALLBACK_ANSWERS = [
+    "这个问题我还不会，再学几年吧~",
+    "emmm...我还没学到这个，换个问题试试？",
+    "我只是一个 ~3.37M 的小模型，这个问题超纲了！",
+    "呃...你问住我了，我回去好好学学再来回答。",
+    "这个问题太难了，我选择卖萌 (◕ᴗ◕✿)",
+]
 
 
 
@@ -77,9 +86,15 @@ def chat(prompt, temperature, top_k, top_p, max_tokens, repeat_penalty):
         return_confidence=True,
     )
     elapsed = time.time() - start
-    conf = result["avg_confidence"]
-    conf_label = "高" if conf > 0.8 else ("中" if conf > 0.5 else "低")
-    response = f"{result['text']}\n\n---\n推理耗时: {elapsed:.2f}s | 置信度: {conf:.0%} ({conf_label})"
+    text = result["text"].strip()
+    if not text or text in ("。", "，", ".", ","):
+        text = random.choice(FALLBACK_ANSWERS)
+        conf_label = "低"
+        response = f"{text}\n\n---\n推理耗时: {elapsed:.2f}s | 置信度: N/A ({conf_label})"
+    else:
+        conf = result["avg_confidence"]
+        conf_label = "高" if conf > 0.8 else ("中" if conf > 0.5 else "低")
+        response = f"{text}\n\n---\n推理耗时: {elapsed:.2f}s | 置信度: {conf:.0%} ({conf_label})"
     return response, model_info
 
 
@@ -107,6 +122,9 @@ def check_consistency(prompt, max_tokens, repeat_penalty):
     counter = Counter(results)
     most_common_text, most_common_count = counter.most_common(1)[0]
     ratio = most_common_count / n_samples
+
+    if not most_common_text.strip() or most_common_text.strip() in ("。", "，", ".", ","):
+        most_common_text = random.choice(FALLBACK_ANSWERS)
 
     if ratio >= 0.8:
         verdict = f"自洽性: {most_common_count}/{n_samples} 次一致 (高可信度)"
