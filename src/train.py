@@ -238,6 +238,9 @@ def train(device_arg: str | None = None, use_flash: bool = True, config_path: st
                         {"model": model.state_dict(), "cfg": cfg},
                         os.path.join(save_dir, "last.pt"),
                     )
+                    # 实时更新 loss 曲线
+                    loss_curve_path = os.path.join(save_dir, "loss_curve.png")
+                    plot_loss_curve(train_losses, val_losses, eval_interval, loss_curve_path)
             if step >= total_steps or early_stop_triggered:
                 break
 
