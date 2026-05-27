@@ -55,7 +55,7 @@ def run_test(model, tok, device, test_path="data/test.jsonl"):
             model, tok, prompt,
             max_new_tokens=40, temperature=0.0,
             repetition_penalty=2.0,
-            stop_strings=["用户:", "\n用户", "。"],
+            stop_strings=["用户:", "\n用户", "。", "；"],
             device=device,
         )
 

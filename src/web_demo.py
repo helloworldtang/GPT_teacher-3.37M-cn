@@ -69,10 +69,17 @@ def ensure_model():
     return True
 
 
-def chat(prompt, temperature, top_k, top_p, max_tokens, repeat_penalty):
-    if not ensure_model():
-        return "错误：未找到模型文件 checkpoints/best.pt，请先运行训练。\n\n运行命令: uv run python -m src.train", ""
+def build_multi_turn_prompt(history, new_message):
+    """将对话历史拼成模型能理解的格式：用户:Q1\n助手:A1\n用户:Q2\n助手:"""
+    parts = []
+    for user_msg, assistant_msg in history:
+        parts.append(f"用户:{user_msg}\n助手:{assistant_msg}")
+    parts.append(f"用户:{new_message}\n助手:")
+    return "\n".join(parts)
 
+
+def do_generate(prompt, temperature, top_k, top_p, max_tokens, repeat_penalty):
+    """执行推理，返回 (text, elapsed, confidence_info)"""
     start = time.time()
     result = generate(
         model, tokenizer, prompt,
@@ -81,7 +88,7 @@ def chat(prompt, temperature, top_k, top_p, max_tokens, repeat_penalty):
         top_k=int(top_k),
         top_p=top_p,
         repetition_penalty=repeat_penalty,
-        stop_strings=["用户:", "\n用户", "。"],
+        stop_strings=["用户:", "\n用户", "。", "；"],
         device=device,
         return_confidence=True,
     )
@@ -89,10 +96,38 @@ def chat(prompt, temperature, top_k, top_p, max_tokens, repeat_penalty):
     text = result["text"].strip()
     if not text or text in ("。", "，", ".", ","):
         text = random.choice(FALLBACK_ANSWERS)
+        return text, elapsed, None
+    return text, elapsed, result["avg_confidence"]
+
+
+def chat(message, history, temperature, top_k, top_p, max_tokens, repeat_penalty):
+    if not ensure_model():
+        return "错误：未找到模型文件 checkpoints/best.pt，请先运行训练。\n\n运行命令: uv run python -m src.train"
+
+    prompt = build_multi_turn_prompt(history or [], message)
+    text, elapsed, conf = do_generate(prompt, temperature, top_k, top_p, max_tokens, repeat_penalty)
+
+    if conf is None:
+        conf_label = "低"
+        footer = f"推理耗时: {elapsed:.2f}s | 置信度: N/A ({conf_label})"
+    else:
+        conf_label = "高" if conf > 0.8 else ("中" if conf > 0.5 else "低")
+        footer = f"推理耗时: {elapsed:.2f}s | 置信度: {conf:.0%} ({conf_label})"
+
+    return text
+
+
+def chat_simple(prompt, temperature, top_k, top_p, max_tokens, repeat_penalty):
+    """单轮问答模式，用于旧版按钮兼容"""
+    if not ensure_model():
+        return "错误：未找到模型文件 checkpoints/best.pt，请先运行训练。", ""
+
+    text, elapsed, conf = do_generate(prompt, temperature, top_k, top_p, max_tokens, repeat_penalty)
+
+    if conf is None:
         conf_label = "低"
         response = f"{text}\n\n---\n推理耗时: {elapsed:.2f}s | 置信度: N/A ({conf_label})"
     else:
-        conf = result["avg_confidence"]
         conf_label = "高" if conf > 0.8 else ("中" if conf > 0.5 else "低")
         response = f"{text}\n\n---\n推理耗时: {elapsed:.2f}s | 置信度: {conf:.0%} ({conf_label})"
     return response, model_info
@@ -113,7 +148,7 @@ def check_consistency(prompt, max_tokens, repeat_penalty):
             top_k=50,
             top_p=0.9,
             repetition_penalty=repeat_penalty,
-            stop_strings=["用户:", "\n用户", "。"],
+            stop_strings=["用户:", "\n用户", "。", "；"],
             device=device,
         )
         results.append(r)
@@ -160,25 +195,27 @@ with gr.Blocks(
     gr.Markdown(
         "# GPT Teacher 教学演示\n"
         "这是一个 ~3.37M 参数的微型 GPT 模型，展示了 Transformer Decoder-only 架构的推理过程。\n\n"
-        "**快速开始**: 点击下方问题按钮，或输入自己的问题。"
+        "**快速开始**: 点击下方问题按钮，或在对话框中输入自己的问题，支持多轮连续对话。"
     )
 
     with gr.Row():
         with gr.Column(scale=3):
-            input_box = gr.Textbox(
-                label="输入问题",
+            chatbot = gr.Chatbot(label="对话", height=400)
+            msg_input = gr.Textbox(
+                label="输入消息",
                 placeholder="输入你想问的问题...",
                 lines=2,
             )
-            output_box = gr.Textbox(
-                label="模型回答",
-                lines=6,
-            )
-
             with gr.Row():
-                submit_btn = gr.Button("提问", variant="primary")
-                consistency_btn = gr.Button("自洽性检测 (5次采样)")
-                clear_btn = gr.Button("清空")
+                send_btn = gr.Button("发送", variant="primary")
+                clear_btn = gr.Button("清空对话")
+
+            with gr.Accordion("单轮模式（含置信度和自洽性检测）", open=False):
+                single_input = gr.Textbox(label="输入问题", placeholder="单轮提问...", lines=2)
+                single_output = gr.Textbox(label="模型回答", lines=4)
+                with gr.Row():
+                    single_btn = gr.Button("提问", variant="primary")
+                    consistency_btn = gr.Button("自洽性检测 (5次采样)")
 
         with gr.Column(scale=1):
             temperature = gr.Slider(
@@ -208,41 +245,78 @@ with gr.Blocks(
                     info="防止模型重复说同样的话",
                 )
             model_info_box = gr.Markdown(
-                "模型尚未加载，点击「提问」自动加载"
+                "模型尚未加载，点击「发送」自动加载"
             )
 
     gr.Markdown("### 点击试试这些问题")
     with gr.Row():
         for q in EXAMPLE_QUESTIONS[:4]:
             gr.Button(q, elem_classes="example-btn").click(
-                lambda x=q: chat(x, 0.0, 50, 0.9, 128, 1.5),
-                inputs=[], outputs=[output_box, model_info_box],
-            ).then(lambda x=q: x, inputs=[], outputs=[input_box])
+                lambda q=q, history=[]: (history + [(q, None)], q),
+                inputs=[],
+                outputs=[chatbot, msg_input],
+            ).then(
+                chat,
+                [msg_input, chatbot, temperature, top_k, top_p, max_tokens, repeat_penalty],
+                [chatbot],
+            ).then(
+                lambda: ensure_model() and model_info or "模型尚未加载",
+                inputs=[], outputs=[model_info_box],
+            ).then(lambda: "", inputs=[], outputs=[msg_input])
     with gr.Row():
         for q in EXAMPLE_QUESTIONS[4:]:
             gr.Button(q, elem_classes="example-btn").click(
-                lambda x=q: chat(x, 0.0, 50, 0.9, 128, 1.5),
-                inputs=[], outputs=[output_box, model_info_box],
-            ).then(lambda x=q: x, inputs=[], outputs=[input_box])
+                lambda q=q, history=[]: (history + [(q, None)], q),
+                inputs=[],
+                outputs=[chatbot, msg_input],
+            ).then(
+                chat,
+                [msg_input, chatbot, temperature, top_k, top_p, max_tokens, repeat_penalty],
+                [chatbot],
+            ).then(
+                lambda: ensure_model() and model_info or "模型尚未加载",
+                inputs=[], outputs=[model_info_box],
+            ).then(lambda: "", inputs=[], outputs=[msg_input])
 
-    submit_btn.click(
+    # 多轮对话
+    send_btn.click(
         chat,
-        [input_box, temperature, top_k, top_p, max_tokens, repeat_penalty],
-        [output_box, model_info_box],
+        [msg_input, chatbot, temperature, top_k, top_p, max_tokens, repeat_penalty],
+        [chatbot],
+    ).then(
+        lambda: ensure_model() and model_info or "模型尚未加载",
+        inputs=[], outputs=[model_info_box],
+    ).then(lambda: "", inputs=[], outputs=[msg_input])
+
+    msg_input.submit(
+        chat,
+        [msg_input, chatbot, temperature, top_k, top_p, max_tokens, repeat_penalty],
+        [chatbot],
+    ).then(
+        lambda: ensure_model() and model_info or "模型尚未加载",
+        inputs=[], outputs=[model_info_box],
+    ).then(lambda: "", inputs=[], outputs=[msg_input])
+
+    clear_btn.click(
+        lambda: ([], ""),
+        inputs=[], outputs=[chatbot, msg_input],
     )
-    input_box.submit(
-        chat,
-        [input_box, temperature, top_k, top_p, max_tokens, repeat_penalty],
-        [output_box, model_info_box],
+
+    # 单轮模式
+    single_btn.click(
+        chat_simple,
+        [single_input, temperature, top_k, top_p, max_tokens, repeat_penalty],
+        [single_output, model_info_box],
+    )
+    single_input.submit(
+        chat_simple,
+        [single_input, temperature, top_k, top_p, max_tokens, repeat_penalty],
+        [single_output, model_info_box],
     )
     consistency_btn.click(
         check_consistency,
-        [input_box, max_tokens, repeat_penalty],
-        [output_box, model_info_box],
-    )
-    clear_btn.click(
-        lambda: ("", "", model_info or "模型尚未加载，点击「提问」自动加载"),
-        inputs=[], outputs=[input_box, output_box, model_info_box],
+        [single_input, max_tokens, repeat_penalty],
+        [single_output, model_info_box],
     )
 
 

@@ -42,6 +42,10 @@ dev = [
     "flake8>=4.0",
     "mypy>=0.950",
 ]
+notebook = [
+    "jupyter>=1.0",
+    "ipywidgets>=8.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/gpt-teacher/gpt-teacher"
