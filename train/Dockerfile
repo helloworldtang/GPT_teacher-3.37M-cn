@@ -1,0 +1,24 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+# Copy project files
+COPY pyproject.toml uv.lock ./
+COPY core/ core/
+COPY train/ train/
+
+# Install dependencies, pin starlette<1.0 for Gradio 4.x compatibility
+RUN uv sync --no-dev --frozen && \
+    uv pip install "starlette<1.0.0"
+
+# Expose Gradio port
+EXPOSE 7860
+
+# Gradio in Docker: bind all interfaces
+ENV SERVER_NAME=0.0.0.0
+ENV GRADIO_ANALYTICS_ENABLED=false
+
+CMD ["/app/.venv/bin/python", "-m", "train.web_demo"]

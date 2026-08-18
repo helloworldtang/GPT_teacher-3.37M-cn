@@ -48,7 +48,9 @@ dmypy.json
 .pyre/
 
 # Project specific
-checkpoints/
+train/checkpoints/
+distill/checkpoints/
+distill/data/
 logs/
 *.log
 .env

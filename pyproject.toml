@@ -28,11 +28,12 @@ dependencies = [
     "tokenizers>=0.13.0",
     "numpy>=1.21.0",
     "pyyaml>=6.0",
-    "gradio>=4.0.0",
+    "gradio>=4.25.0,<4.26.0",
     "starlette<1.0.0",
     "huggingface_hub<0.25.0",
     "matplotlib>=3.5.0",
     "tqdm>=4.60.0",
+    "transformers>=4.48.3",
 ]
 
 [project.optional-dependencies]
@@ -54,7 +55,7 @@ Repository = "https://github.com/gpt-teacher/gpt-teacher"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["src*"]
+include = ["core*", "train*", "distill*"]
 
 [tool.black]
 line-length = 100

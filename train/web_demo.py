@@ -1,0 +1,366 @@
+import os
+os.environ["GRADIO_ANALYTICS_ENABLED"] = "false"
+
+import gradio as gr
+import random
+import torch
+import time
+import os
+from collections import Counter
+from core.model import GPT
+from core.tokenizer import load_tokenizer
+from core.infer import generate
+
+# gradio_client get_type() crashes when additionalProperties is bool instead of dict
+import gradio_client.utils as _gcu
+_orig_get_type = _gcu.get_type
+def _safe_get_type(schema):
+    if not isinstance(schema, dict):
+        return "null"
+    return _orig_get_type(schema)
+_gcu.get_type = _safe_get_type
+
+FALLBACK_ANSWERS = [
+    "这个问题我还不会，再学几年吧~",
+    "emmm...我还没学到这个，换个问题试试？",
+    "我只是一个 ~3.37M 的小模型，这个问题超纲了！",
+    "呃...你问住我了，我回去好好学学再来回答。",
+    "这个问题太难了，我选择卖萌 (◕ᴗ◕✿)",
+]
+
+
+
+def load_model(ckpt_path):
+    checkpoint = torch.load(ckpt_path, map_location="cpu", weights_only=False)
+    cfg = checkpoint["cfg"]
+
+    tok = load_tokenizer(
+        cfg.get("tokenizer", {}).get("type", "byte"),
+        cfg.get("tokenizer", {}).get("path"),
+    )
+
+    model = GPT(
+        vocab_size=tok.vocab_size,
+        n_layer=cfg["model"]["n_layer"],
+        n_head=cfg["model"]["n_head"],
+        n_embd=cfg["model"]["n_embd"],
+        seq_len=cfg["model"]["seq_len"],
+        dropout=0.0,
+        n_kv_head=cfg["model"].get("n_kv_head"),
+    )
+    model.load_state_dict(checkpoint["model"])
+    model.eval()
+    return model, tok, cfg
+
+
+DEFAULT_CKPT = "train/checkpoints/best.pt"
+
+model = None
+tokenizer = None
+device = None
+model_info = ""
+
+
+def get_device():
+    return torch.device(
+        "cuda" if torch.cuda.is_available()
+        else ("mps" if torch.backends.mps.is_available() else "cpu")
+    )
+
+
+def ensure_model():
+    global model, tokenizer, device, model_info
+    if model is None:
+        if not os.path.exists(DEFAULT_CKPT):
+            return False
+        model, tokenizer, cfg = load_model(DEFAULT_CKPT)
+        device = get_device()
+        model.to(device)
+        n_params = sum(p.numel() for p in model.parameters())
+        model_info = f"模型: {n_params/1e6:.2f}M 参数 | 设备: {device}"
+    return True
+
+
+def build_multi_turn_prompt(history, new_message):
+    """将对话历史拼成模型能理解的格式：用户:Q1\n助手:A1\n用户:Q2\n助手:"""
+    parts = []
+    for user_msg, assistant_msg in history:
+        parts.append(f"用户:{user_msg}\n助手:{assistant_msg}")
+    parts.append(f"用户:{new_message}\n助手:")
+    return "\n".join(parts)
+
+
+def do_generate(prompt, temperature, top_k, top_p, max_tokens, repeat_penalty):
+    """执行推理，返回 (text, elapsed, confidence_info)"""
+    start = time.time()
+    result = generate(
+        model, tokenizer, prompt,
+        max_new_tokens=int(max_tokens),
+        temperature=temperature,
+        top_k=int(top_k),
+        top_p=top_p,
+        repetition_penalty=repeat_penalty,
+        stop_strings=["用户:", "\n用户", "。", "；"],
+        device=device,
+        return_confidence=True,
+    )
+    elapsed = time.time() - start
+    text = result["text"].strip()
+    if not text or text in ("。", "，", ".", ","):
+        text = random.choice(FALLBACK_ANSWERS)
+        return text, elapsed, None
+    return text, elapsed, result["avg_confidence"]
+
+
+def chat(message, history, temperature, top_k, top_p, max_tokens, repeat_penalty):
+    if not ensure_model():
+        history = history or []
+        history.append([message, "错误：未找到模型文件 train/checkpoints/best.pt，请先运行训练。\n\n运行命令: uv run python -m train.train"])
+        return history
+
+    prompt = build_multi_turn_prompt(history or [], message)
+    text, elapsed, conf = do_generate(prompt, temperature, top_k, top_p, max_tokens, repeat_penalty)
+
+    history = history or []
+    history.append([message, text])
+    return history
+
+
+def chat_simple(prompt, temperature, top_k, top_p, max_tokens, repeat_penalty):
+    """单轮问答模式，用于旧版按钮兼容"""
+    if not ensure_model():
+        return "错误：未找到模型文件 train/checkpoints/best.pt，请先运行训练。", ""
+
+    text, elapsed, conf = do_generate(prompt, temperature, top_k, top_p, max_tokens, repeat_penalty)
+
+    if conf is None:
+        conf_label = "低"
+        response = f"{text}\n\n---\n推理耗时: {elapsed:.2f}s | 置信度: N/A ({conf_label})"
+    else:
+        conf_label = "高" if conf > 0.8 else ("中" if conf > 0.5 else "低")
+        response = f"{text}\n\n---\n推理耗时: {elapsed:.2f}s | 置信度: {conf:.0%} ({conf_label})"
+    return response, model_info
+
+
+def check_consistency(prompt, max_tokens, repeat_penalty):
+    if not ensure_model():
+        return "错误：模型未加载", ""
+
+    start = time.time()
+    n_samples = 5
+    results = []
+    for _ in range(n_samples):
+        r = generate(
+            model, tokenizer, prompt,
+            max_new_tokens=int(max_tokens),
+            temperature=0.5,
+            top_k=50,
+            top_p=0.9,
+            repetition_penalty=repeat_penalty,
+            stop_strings=["用户:", "\n用户", "。", "；"],
+            device=device,
+        )
+        results.append(r)
+    elapsed = time.time() - start
+
+    counter = Counter(results)
+    most_common_text, most_common_count = counter.most_common(1)[0]
+    ratio = most_common_count / n_samples
+
+    if not most_common_text.strip() or most_common_text.strip() in ("。", "，", ".", ","):
+        most_common_text = random.choice(FALLBACK_ANSWERS)
+
+    if ratio >= 0.8:
+        verdict = f"自洽性: {most_common_count}/{n_samples} 次一致 (高可信度)"
+    elif ratio >= 0.5:
+        verdict = f"自洽性: {most_common_count}/{n_samples} 次一致 (中可信度)"
+    else:
+        verdict = f"自洽性: {most_common_count}/{n_samples} 次一致 (低可信度)"
+
+    detail = "\n".join(f"  第{i+1}次: {r}" for i, r in enumerate(results))
+    response = f"{most_common_text}\n\n---\n{verdict}\n检测耗时: {elapsed:.2f}s ({n_samples}次采样)\n\n所有回答:\n{detail}"
+    return response, model_info
+
+
+# 快捷问题
+EXAMPLE_QUESTIONS = [
+    "什么是注意力机制？",
+    "RoPE 是什么？",
+    "什么是机器学习？",
+    "计算 15 乘以 6 是多少？",
+    "你是谁？",
+    "太阳系有哪些行星？",
+    "蒸馏水和纯水有什么区别？",
+    "权重共享有什么好处？",
+]
+
+with gr.Blocks(
+    title="GPT Teacher 教学演示",
+    css="""
+        .example-btn { min-width: 120px; margin: 4px; }
+    """
+) as demo:
+
+    gr.Markdown(
+        "# GPT Teacher 教学演示\n"
+        "这是一个 ~3.37M 参数的微型 GPT 模型，展示了 Transformer Decoder-only 架构的推理过程。\n\n"
+        "**快速开始**: 点击下方问题按钮，或在对话框中输入自己的问题，支持多轮连续对话。"
+    )
+
+    with gr.Row():
+        with gr.Column(scale=3):
+            chatbot = gr.Chatbot(label="对话", height=400)
+            msg_input = gr.Textbox(
+                label="输入消息",
+                placeholder="输入你想问的问题...",
+                lines=2,
+            )
+            with gr.Row():
+                send_btn = gr.Button("发送", variant="primary")
+                clear_btn = gr.Button("清空对话")
+
+            with gr.Accordion("单轮模式（含置信度和自洽性检测）", open=False):
+                single_input = gr.Textbox(label="输入问题", placeholder="单轮提问...", lines=2)
+                single_output = gr.Textbox(label="模型回答", lines=4)
+                with gr.Row():
+                    single_btn = gr.Button("提问", variant="primary")
+                    consistency_btn = gr.Button("自洽性检测 (5次采样)")
+
+        with gr.Column(scale=1):
+            temperature = gr.Slider(
+                0.0, 1.5, value=0.0, step=0.1,
+                label="Temperature (温度)",
+                info="0=精确复制，1=有创造性",
+            )
+            top_k = gr.Slider(
+                1, 100, value=50, step=1,
+                label="Top-K",
+                info="只从概率最高的K个词中选",
+            )
+            top_p = gr.Slider(
+                0.0, 1.0, value=0.9, step=0.05,
+                label="Top-P (核采样)",
+                info="累积概率阈值",
+            )
+            with gr.Accordion("高级参数", open=False):
+                max_tokens = gr.Slider(
+                    16, 256, value=128, step=16,
+                    label="Max Tokens (最大生成长度)",
+                    info="控制回答的最大长度",
+                )
+                repeat_penalty = gr.Slider(
+                    1.0, 2.0, value=1.5, step=0.1,
+                    label="Repetition Penalty (重复惩罚)",
+                    info="防止模型重复说同样的话",
+                )
+            model_info_box = gr.Markdown(
+                "模型尚未加载，点击「发送」自动加载"
+            )
+
+    gr.Markdown("### 点击试试这些问题")
+    with gr.Row():
+        for q in EXAMPLE_QUESTIONS[:4]:
+            gr.Button(q, elem_classes="example-btn").click(
+                lambda q=q, history=[]: (history + [(q, None)], q),
+                inputs=[],
+                outputs=[chatbot, msg_input],
+            ).then(
+                chat,
+                [msg_input, chatbot, temperature, top_k, top_p, max_tokens, repeat_penalty],
+                [chatbot],
+            ).then(
+                lambda: ensure_model() and model_info or "模型尚未加载",
+                inputs=[], outputs=[model_info_box],
+            ).then(lambda: "", inputs=[], outputs=[msg_input])
+    with gr.Row():
+        for q in EXAMPLE_QUESTIONS[4:]:
+            gr.Button(q, elem_classes="example-btn").click(
+                lambda q=q, history=[]: (history + [(q, None)], q),
+                inputs=[],
+                outputs=[chatbot, msg_input],
+            ).then(
+                chat,
+                [msg_input, chatbot, temperature, top_k, top_p, max_tokens, repeat_penalty],
+                [chatbot],
+            ).then(
+                lambda: ensure_model() and model_info or "模型尚未加载",
+                inputs=[], outputs=[model_info_box],
+            ).then(lambda: "", inputs=[], outputs=[msg_input])
+
+    # 多轮对话
+    send_btn.click(
+        chat,
+        [msg_input, chatbot, temperature, top_k, top_p, max_tokens, repeat_penalty],
+        [chatbot],
+    ).then(
+        lambda: ensure_model() and model_info or "模型尚未加载",
+        inputs=[], outputs=[model_info_box],
+    ).then(lambda: "", inputs=[], outputs=[msg_input])
+
+    msg_input.submit(
+        chat,
+        [msg_input, chatbot, temperature, top_k, top_p, max_tokens, repeat_penalty],
+        [chatbot],
+    ).then(
+        lambda: ensure_model() and model_info or "模型尚未加载",
+        inputs=[], outputs=[model_info_box],
+    ).then(lambda: "", inputs=[], outputs=[msg_input])
+
+    clear_btn.click(
+        lambda: ([], ""),
+        inputs=[], outputs=[chatbot, msg_input],
+    )
+
+    # 单轮模式
+    single_btn.click(
+        chat_simple,
+        [single_input, temperature, top_k, top_p, max_tokens, repeat_penalty],
+        [single_output, model_info_box],
+    )
+    single_input.submit(
+        chat_simple,
+        [single_input, temperature, top_k, top_p, max_tokens, repeat_penalty],
+        [single_output, model_info_box],
+    )
+    consistency_btn.click(
+        check_consistency,
+        [single_input, max_tokens, repeat_penalty],
+        [single_output, model_info_box],
+    )
+
+
+if __name__ == "__main__":
+    import os
+    import socket
+
+    port = 7860
+
+    def is_port_in_use(p):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            return s.connect_ex(("127.0.0.1", p)) == 0
+
+    if is_port_in_use(port):
+        import subprocess
+        result = subprocess.run(["lsof", "-ti", f":{port}"], capture_output=True, text=True)
+        pids = result.stdout.strip().split("\n")
+        print(f"\n端口 {port} 已被占用 (PID: {', '.join(pids)})")
+        choice = input("是否终止占用进程？[y/N] ").strip().lower()
+        if choice == "y":
+            for pid in pids:
+                os.kill(int(pid), 9)
+            print(f"已终止 PID {', '.join(pids)}")
+        else:
+            print("退出。请手动释放端口后重试。")
+            exit(0)
+
+    print("\n" + "=" * 50)
+    print("  GPT Teacher Web Demo 启动成功！")
+    print("  打开浏览器访问: http://127.0.0.1:7860")
+    print("  按 Ctrl+C 停止服务")
+    print("=" * 50 + "\n")
+    demo.queue().launch(
+        server_name=os.environ.get("SERVER_NAME", "127.0.0.1"),
+        server_port=port,
+        show_error=True,
+        share=False,
+    )

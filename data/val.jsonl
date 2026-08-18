@@ -1,5 +1,0 @@
-{"prompt": "什么是注意力机制？", "completion": "注意力机制通过计算查询和键的相关性分配权重，让模型动态关注最相关的部分。"}
-{"prompt": "RMSNorm 和 LayerNorm 有什么区别？", "completion": "RMSNorm 只做均方根缩放不减均值，比 LayerNorm 更简洁高效。"}
-{"prompt": "蒸馏水和纯水有什么区别？", "completion": "蒸馏水通过蒸馏冷凝制得，纯水杂质极低。"}
-{"prompt": "什么是机器学习？", "completion": "让计算机通过数据自动学习规律，而不需要显式编写每一条规则的技术。"}
-{"prompt": "什么是 Python？", "completion": "一种简洁易读的高级编程语言，以丰富的第三方库生态而闻名。"}
