@@ -1,5 +1,7 @@
 import json
+
 import torch
+
 from core.data import InstructDataset, collate
 from core.tokenizer import ByteTokenizer
 
@@ -13,10 +15,13 @@ def _write_jsonl(path, records):
 class TestInstructDataset:
     def test_length(self, tmp_path):
         f = tmp_path / "test.jsonl"
-        _write_jsonl(str(f), [
-            {"prompt": "问题1", "completion": "答案1"},
-            {"prompt": "问题2", "completion": "答案2"},
-        ])
+        _write_jsonl(
+            str(f),
+            [
+                {"prompt": "问题1", "completion": "答案1"},
+                {"prompt": "问题2", "completion": "答案2"},
+            ],
+        )
         tok = ByteTokenizer()
         ds = InstructDataset(str(f), tok, seq_len=128)
         assert len(ds) == 2
@@ -37,7 +42,7 @@ class TestInstructDataset:
         ids, tar = ds[0]
         # 前缀部分 target 应为 -100
         prefix_len = len([256] + tok.encode("用户:你好\n助手:", add_special_tokens=False))
-        assert all(t == -100 for t in tar[:prefix_len - 1])
+        assert all(t == -100 for t in tar[: prefix_len - 1])
 
     def test_truncation(self, tmp_path):
         f = tmp_path / "test.jsonl"
@@ -52,10 +57,13 @@ class TestInstructDataset:
 class TestCollate:
     def test_padding_shape(self, tmp_path):
         f = tmp_path / "test.jsonl"
-        _write_jsonl(str(f), [
-            {"prompt": "短", "completion": "答"},
-            {"prompt": "比较长的问题", "completion": "比较长的答案"},
-        ])
+        _write_jsonl(
+            str(f),
+            [
+                {"prompt": "短", "completion": "答"},
+                {"prompt": "比较长的问题", "completion": "比较长的答案"},
+            ],
+        )
         tok = ByteTokenizer()
         ds = InstructDataset(str(f), tok, seq_len=64)
         batch = [ds[0], ds[1]]

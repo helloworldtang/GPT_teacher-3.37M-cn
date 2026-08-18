@@ -1,8 +1,9 @@
-import os
 import random
-import torch
+
 import numpy as np
-from core.utils import set_seed, ensure_dir, num_threads
+import torch
+
+from core.utils import ensure_dir, num_threads, set_seed
 
 
 class TestSetSeed:

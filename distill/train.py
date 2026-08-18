@@ -14,33 +14,49 @@
 
 from __future__ import annotations
 
+import argparse
 import json
-import math
 import os
 import time
-import argparse
+from typing import Any
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch import Tensor
 from torch.utils.data import DataLoader, Dataset
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, PreTrainedTokenizerBase
 
 from core.model import GPT
-from core.utils import set_seed, ensure_dir
-
+from core.utils import ensure_dir, set_seed
 
 # ── 数据集 ──────────────────────────────────────────
 
-class KDDataset(Dataset):
-    """蒸馏训练数据集，用 teacher 的 tokenizer 编码。"""
 
-    def __init__(self, path: str, tok, seq_len: int, vocab_size: int):
-        self.samples = []
+class KDDataset(Dataset[tuple[Tensor, Tensor]]):
+    """蒸馏训练数据集，用 teacher 的 tokenizer 编码。
+
+    编码后截断到 seq_len，prompt 部分的 target 置 -100，
+    不足 seq_len 时用 pad/-100 补齐。
+
+    Attributes:
+        samples: (输入 id 序列, 目标 id 序列) 列表。
+    """
+
+    def __init__(self, path: str, tok: PreTrainedTokenizerBase, seq_len: int, vocab_size: int) -> None:
+        """加载 jsonl 并用 teacher tokenizer 编码。
+
+        Args:
+            path: 训练数据 jsonl 路径。
+            tok: teacher 分词器。
+            seq_len: 最大序列长度。
+            vocab_size: 词表上限（超出 vocab 的 token 被过滤）。
+        """
+        self.samples: list[tuple[list[int], list[int]]] = []
         bos = tok.bos_token_id or tok.eos_token_id or 0
         eos = tok.eos_token_id or tok.sep_token_id or bos
 
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             for line in f:
                 obj = json.loads(line)
                 prompt = obj["prompt"]
@@ -59,8 +75,8 @@ class KDDataset(Dataset):
 
                 # mask 掉 prompt 部分的 target，只对 completion 计算 loss
                 mask_len = min(prompt_len - 1, len(ids) - 1)
-                y = [-100] * mask_len + ids[mask_len + 1:]
-                y = y[:len(ids) - 1]
+                y = [-100] * mask_len + ids[mask_len + 1 :]
+                y = y[: len(ids) - 1]
 
                 x = ids[:-1][:seq_len]
                 y = y[:seq_len]
@@ -73,23 +89,42 @@ class KDDataset(Dataset):
 
                 self.samples.append((x, y))
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.samples)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> tuple[Tensor, Tensor]:
         x, y = self.samples[idx]
         return torch.tensor(x, dtype=torch.long), torch.tensor(y, dtype=torch.long)
 
 
-def collate_fn(batch):
-    xs, ys = zip(*batch)
+def collate_fn(batch: list[tuple[Tensor, Tensor]]) -> tuple[Tensor, Tensor]:
+    """把一批 (x, y) 张量对堆叠为 batch 张量。"""
+    xs, ys = zip(*batch, strict=True)
     return torch.stack(xs), torch.stack(ys)
 
 
 # ── 损失函数 ──────────────────────────────────────────
 
-def distillation_loss(student_logits, teacher_logits, targets, alpha, temperature):
-    """蒸馏损失 = α × CE(student, 硬标签) + (1-α) × KL(student, teacher) × T²"""
+
+def distillation_loss(
+    student_logits: Tensor,
+    teacher_logits: Tensor,
+    targets: Tensor,
+    alpha: float,
+    temperature: float,
+) -> Tensor:
+    """蒸馏损失 = α × CE(student, 硬标签) + (1-α) × KL(student, teacher) × T²。
+
+    Args:
+        student_logits: student 模型输出 logits。
+        teacher_logits: teacher 模型输出 logits。
+        targets: 硬标签（-100 忽略）。
+        alpha: CE loss 权重（1-alpha 为 KL 权重）。
+        temperature: 蒸馏温度。
+
+    Returns:
+        组合损失标量。
+    """
     ce = F.cross_entropy(
         student_logits.view(-1, student_logits.size(-1)),
         targets.view(-1),
@@ -97,14 +132,16 @@ def distillation_loss(student_logits, teacher_logits, targets, alpha, temperatur
     )
     student_soft = F.log_softmax(student_logits / temperature, dim=-1)
     teacher_soft = F.softmax(teacher_logits / temperature, dim=-1)
-    kl = F.kl_div(student_soft, teacher_soft, reduction="batchmean") * (temperature ** 2)
+    kl = F.kl_div(student_soft, teacher_soft, reduction="batchmean") * (temperature**2)
     return alpha * ce + (1 - alpha) * kl
 
 
 # ── 评估 ──────────────────────────────────────────────
 
+
 @torch.no_grad()
-def evaluate(model, loader, loss_fn, device):
+def evaluate(model: GPT, loader: DataLoader[Any], loss_fn: nn.Module, device: torch.device) -> float:
+    """在验证集上计算平均 loss（结束后恢复训练态）。"""
     model.eval()
     total, count = 0.0, 0
     for xb, yb in loader:
@@ -119,8 +156,9 @@ def evaluate(model, loader, loss_fn, device):
 
 # ── 主训练流程 ────────────────────────────────────────
 
-def train_kd(args):
-    """Logits 级知识蒸馏训练。"""
+
+def train_kd(args: argparse.Namespace) -> None:
+    """Logits 级知识蒸馏训练：teacher/student 共享 tokenizer，KL 对齐输出分布。"""
     set_seed(42)
 
     # 加载 teacher
@@ -165,7 +203,9 @@ def train_kd(args):
     print(f"设备: {device} | α={args.alpha} | T={args.temperature}")
     print("=" * 50)
 
-    optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=0.1)
+    optimizer = torch.optim.AdamW(  # type: ignore[attr-defined]
+        model.parameters(), lr=args.lr, weight_decay=0.1
+    )
     ce_fn = nn.CrossEntropyLoss(ignore_index=-100)
     ensure_dir(args.save_dir)
 
@@ -189,10 +229,13 @@ def train_kd(args):
                 teacher_logits = teacher_out.logits
 
             loss = distillation_loss(
-                student_logits, teacher_logits, yb,
-                args.alpha, args.temperature,
+                student_logits,
+                teacher_logits,
+                yb,
+                args.alpha,
+                args.temperature,
             )
-            loss.backward()
+            loss.backward()  # type: ignore[no-untyped-call]
             accum += 1
 
             if accum >= args.accum_steps:
@@ -215,16 +258,20 @@ def train_kd(args):
                         best_val_loss = val_loss
                         patience = 0
                         torch.save(
-                            {"model": model.state_dict(), "cfg": {
-                                "model": {
-                                    "n_layer": args.n_layer,
-                                    "n_head": args.n_head,
-                                    "n_embd": args.n_embd,
-                                    "n_kv_head": args.n_kv_head,
-                                    "seq_len": args.seq_len,
-                                    "dropout": 0.1,
-                                }
-                            }, "vocab_size": vocab_size},
+                            {
+                                "model": model.state_dict(),
+                                "cfg": {
+                                    "model": {
+                                        "n_layer": args.n_layer,
+                                        "n_head": args.n_head,
+                                        "n_embd": args.n_embd,
+                                        "n_kv_head": args.n_kv_head,
+                                        "seq_len": args.seq_len,
+                                        "dropout": 0.1,
+                                    }
+                                },
+                                "vocab_size": vocab_size,
+                            },
                             os.path.join(args.save_dir, "distill_best.pt"),
                         )
                         print(f"  → 新最佳 (step {step})")
@@ -244,7 +291,8 @@ def train_kd(args):
     print(f"最佳验证损失: {best_val_loss:.4f}")
 
 
-def main():
+def main() -> None:
+    """命令行入口：--kd 走蒸馏训练，否则委托给 train 模块标准训练。"""
     ap = argparse.ArgumentParser(description="知识蒸馏训练")
     ap.add_argument("--kd", action="store_true", help="启用 logits 级蒸馏模式")
     ap.add_argument("--teacher", default="deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B")
@@ -270,6 +318,7 @@ def main():
         train_kd(args)
     else:
         from train.train import train
+
         train(config_path="train/config.yml")
 
 

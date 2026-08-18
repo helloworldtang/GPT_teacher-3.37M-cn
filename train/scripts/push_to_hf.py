@@ -6,29 +6,27 @@
     huggingface-cli login
 
     # 推送到你的仓库
-    python scripts/push_to_hf.py --repo helloworldtang/GPT-Teacher-3.37M-cn
+    uv run python train/scripts/push_to_hf.py push --repo helloworldtang/GPT-Teacher-3.37M-cn
 
     # 推送到组织仓库
-    python scripts/push_to_hf.py --repo your-org/GPT-Teacher-3.37M-cn
+    uv run python train/scripts/push_to_hf.py push --repo your-org/GPT-Teacher-3.37M-cn
 """
+
 import argparse
 import os
-import json
-import shutil
 
 from huggingface_hub import HfApi, create_repo
-
 
 MODEL_CARD = """\
 # GPT Teacher 3.37M 中文教学模型
 
-一个 3.16M 参数的中文 GPT 教学模型，基于 Llama 风格架构（GQA + SwiGLU + RMSNorm + RoPE）。
+一个 3.37M 参数的中文 GPT 教学模型，基于 Llama 风格架构（GQA + SwiGLU + RMSNorm + RoPE）。
 
 ## 模型信息
 
-- **参数量**: 3.16M
+- **参数量**: 3.37M
 - **架构**: Decoder-only Transformer (Llama-style)
-- **词表大小**: ~1500 (BPE)
+- **词表大小**: 4096 (BPE)
 - **序列长度**: 128
 - **层数**: 4
 - **注意力头**: 4 (GQA, KV头=2)
@@ -45,13 +43,13 @@ cd GPT_teacher-3.37M-cn
 uv sync
 
 # 从 Hugging Face 下载模型到 checkpoints/
-python scripts/download_from_hf.py --repo {repo_id}
+uv run python train/scripts/push_to_hf.py download --repo {repo_id}
 
 # 运行验收测试
 uv run python -m core.evaluate --ckpt train/checkpoints/best.pt
 
 # 启动 Web Demo
-uv run python run.py --skip-train
+uv run python train/run.py --skip-train
 ```
 
 ## 训练细节
@@ -88,9 +86,12 @@ MIT
 """
 
 
-def push_to_hub(repo_id: str, checkpoint_path: str = "train/checkpoints/best.pt",
-                tokenizer_path: str = "train/tokenizer.json",
-                config_path: str = "train/config.yml"):
+def push_to_hub(
+    repo_id: str,
+    checkpoint_path: str = "train/checkpoints/best.pt",
+    tokenizer_path: str = "train/tokenizer.json",
+    config_path: str = "train/config.yml",
+) -> None:
     """推送模型到 Hugging Face Hub。"""
     if not os.path.exists(checkpoint_path):
         print(f"错误: 未找到模型文件 {checkpoint_path}")
@@ -147,21 +148,21 @@ def push_to_hub(repo_id: str, checkpoint_path: str = "train/checkpoints/best.pt"
         repo_type="model",
     )
 
-    print(f"\n推送完成！")
+    print("\n推送完成！")
     print(f"模型页面: https://huggingface.co/{repo_id}")
-    print(f"\n用户可以通过以下命令下载:")
-    print(f"  python scripts/download_from_hf.py --repo {repo_id}")
+    print("\n用户可以通过以下命令下载:")
+    print(f"  uv run python train/scripts/push_to_hf.py download --repo {repo_id}")
 
 
-def download_from_hub(repo_id: str, output_dir: str = "."):
+def download_from_hub(repo_id: str, output_dir: str = ".") -> None:
     """从 Hugging Face Hub 下载模型。"""
     from huggingface_hub import snapshot_download
 
     print(f"从 Hugging Face Hub 下载: {repo_id}")
-    local_dir = snapshot_download(repo_id, repo_type="model", local_dir=output_dir)
+    local_dir: str = snapshot_download(repo_id, repo_type="model", local_dir=output_dir)
     print(f"下载完成: {local_dir}")
-    print(f"\n运行验收测试: uv run python -m core.evaluate --ckpt train/checkpoints/best.pt")
-    print(f"启动 Web Demo: uv run python run.py --skip-train")
+    print("\n运行验收测试: uv run python -m core.evaluate --ckpt train/checkpoints/best.pt")
+    print("启动 Web Demo: uv run python train/run.py --skip-train")
 
 
 if __name__ == "__main__":

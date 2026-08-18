@@ -1,5 +1,4 @@
-import torch
-from core.infer import _trim_leading_punct, _is_punct_token, generate
+from core.infer import _is_punct_token, _trim_leading_punct, generate
 from core.tokenizer import ByteTokenizer
 
 
@@ -41,7 +40,9 @@ class TestGenerate:
 
     def test_return_confidence(self, small_model):
         tok = ByteTokenizer()
-        result = generate(small_model, tok, "测试", max_new_tokens=5, temperature=0.0, device="cpu", return_confidence=True)
+        result = generate(
+            small_model, tok, "测试", max_new_tokens=5, temperature=0.0, device="cpu", return_confidence=True
+        )
         assert isinstance(result, dict)
         assert "text" in result
         assert "avg_confidence" in result

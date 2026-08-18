@@ -27,6 +27,14 @@ jobs:
       - name: Install dependencies
         run: uv sync --extra dev
 
+      - name: Lint (ruff)
+        run: |
+          uv run ruff check core/ train/ distill/
+          uv run ruff format --check core/ train/ distill/
+
+      - name: Type check (mypy strict)
+        run: uv run mypy core/ train/ distill/ --strict
+
       - name: Run unit tests
         run: uv run pytest core/tests/ -q
 

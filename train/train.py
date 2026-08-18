@@ -1,37 +1,60 @@
+"""训练主流程：数据 → 模型 → AdamW + warmup/cosine 训练 → 验收。"""
+
 from __future__ import annotations
 
-import os
-import yaml
-import math
-import time
 import argparse
+import json
+import math
+import os
+import time
+from typing import Any
 
 import torch
 import torch.nn as nn
+import yaml
 from torch.utils.data import DataLoader
 
-from core.utils import set_seed, ensure_dir, num_threads
 from core.data import build_datasets, collate
 from core.model import GPT
+from core.utils import ensure_dir, num_threads, set_seed
 
 
-def load_config(path):
-    with open(path, "r") as f:
-        return yaml.safe_load(f)
+def load_config(path: str) -> dict[str, Any]:
+    """加载 YAML 配置文件。
+
+    Args:
+        path: 配置文件路径。
+
+    Returns:
+        配置字典。
+    """
+    with open(path) as f:
+        cfg: dict[str, Any] = yaml.safe_load(f)
+    return cfg
 
 
-def get_device(want: str | None = None):
+def get_device(want: str | None = None) -> torch.device:
+    """解析训练设备。
+
+    Args:
+        want: "auto"/"cpu"/"cuda"/"mps"，None 等同 auto。
+
+    Returns:
+        目标设备。
+
+    Raises:
+        RuntimeError: 指定了不可用的设备或未知选项。
+    """
     if want is None or want == "auto":
         # 优先级: CUDA > MPS > CPU
         if torch.cuda.is_available():
             print("🚀 使用CUDA GPU加速训练")
             return torch.device("cuda")
-        elif torch.backends.mps.is_available():
+        if torch.backends.mps.is_available():
             print("🍎 使用Apple Neural Engine (MPS)加速训练")
             return torch.device("mps")
-        else:
-            print("🖥️ 使用CPU训练（未检测到GPU/MPS）")
-            return torch.device("cpu")
+        print("🖥️ 使用CPU训练（未检测到GPU/MPS）")
+        return torch.device("cpu")
     if want == "cpu":
         print("🖥️ 强制使用CPU训练")
         return torch.device("cpu")
@@ -48,9 +71,20 @@ def get_device(want: str | None = None):
     raise RuntimeError(f"Unknown device option: {want}. Available options: auto, cpu, cuda, mps")
 
 
-def plot_loss_curve(train_losses, val_losses, eval_interval, save_path):
+def plot_loss_curve(train_losses: list[float], val_losses: list[float], eval_interval: int, save_path: str) -> None:
+    """绘制并保存训练/验证 loss 曲线。
+
+    matplotlib 未安装时静默跳过。
+
+    Args:
+        train_losses: 每 step 的训练 loss。
+        val_losses: 每次评估的验证 loss。
+        eval_interval: 评估间隔（step 数）。
+        save_path: 输出 png 路径。
+    """
     try:
         import matplotlib
+
         matplotlib.use("Agg")
         import matplotlib.pyplot as plt
     except ImportError:
@@ -77,14 +111,54 @@ def plot_loss_curve(train_losses, val_losses, eval_interval, save_path):
     print(f"  Loss 曲线已保存: {save_path}")
 
 
-def train(device_arg: str | None = None, use_flash: bool = True, config_path: str | None = None, max_steps_override: int | None = None):
+def evaluate(model: GPT, loader: DataLoader[Any], loss_fn: nn.Module, device: torch.device) -> float:
+    """在验证集上计算平均 loss（结束后恢复训练态）。
+
+    Args:
+        model: 待评估模型。
+        loader: 验证集 DataLoader。
+        loss_fn: 损失函数。
+        device: 计算设备。
+
+    Returns:
+        平均验证 loss。
+    """
+    model.eval()
+    total = 0.0
+    count = 0
+    with torch.no_grad():
+        for xb, yb in loader:
+            xb = xb.to(device)
+            yb = yb.to(device)
+            logits, _ = model(xb)
+            loss = loss_fn(logits.view(-1, logits.size(-1)), yb.view(-1))
+            total += loss.item()
+            count += 1
+    model.train()
+    return total / max(1, count)
+
+
+def train(
+    device_arg: str | None = None,
+    use_flash: bool = True,
+    config_path: str | None = None,
+    max_steps_override: int | None = None,
+) -> None:
+    """完整训练流程：早停、checkpoint、loss 曲线、量化导出与自动验收。
+
+    Args:
+        device_arg: 训练设备（None/auto/cpu/cuda/mps）。
+        use_flash: 是否启用 Flash Attention。
+        config_path: 配置文件路径，默认 train/config.yml。
+        max_steps_override: 覆盖配置中的最大训练步数。
+    """
     if config_path is None:
         config_path = "train/config.yml"
     cfg = load_config(config_path)
     set_seed(cfg["training"]["seed"])
     torch.set_num_threads(num_threads())
     tok, train_ds, val_ds = build_datasets(cfg)
-    seq_len = cfg["model"]["seq_len"]
+    seq_len: int = cfg["model"]["seq_len"]
     model = GPT(
         vocab_size=tok.vocab_size,
         n_layer=cfg["model"]["n_layer"],
@@ -99,37 +173,39 @@ def train(device_arg: str | None = None, use_flash: bool = True, config_path: st
     model.to(device)
 
     total_params = sum(p.numel() for p in model.parameters())
-    print(f"模型参数量: {total_params:,} ({total_params/1e6:.2f}M)")
+    print(f"模型参数量: {total_params:,} ({total_params / 1e6:.2f}M)")
     print(f"设备: {device} | 序列长度: {seq_len} | 训练集: {len(train_ds)} 条")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
 
-    bs = cfg["training"]["batch_size"]
-    mb = cfg["training"]["micro_batch"]
+    assert tok.pad_id is not None, "分词器缺少 PAD 特殊 token"
+    pad_id: int = tok.pad_id
+    bs: int = cfg["training"]["batch_size"]
+    mb: int = cfg["training"]["micro_batch"]
     train_loader = DataLoader(
         train_ds,
         batch_size=mb,
         shuffle=True,
         num_workers=0,
-        pin_memory=True if device.type != 'cpu' else False,
-        collate_fn=lambda b: collate(b, seq_len, tok.pad_id),
+        pin_memory=device.type != "cpu",
+        collate_fn=lambda b: collate(b, seq_len, pad_id),
     )
     val_loader = DataLoader(
         val_ds,
         batch_size=mb,
         shuffle=False,
         num_workers=0,
-        pin_memory=True if device.type != 'cpu' else False,
-        collate_fn=lambda b: collate(b, seq_len, tok.pad_id),
+        pin_memory=device.type != "cpu",
+        collate_fn=lambda b: collate(b, seq_len, pad_id),
     )
-    opt = torch.optim.AdamW(
+    opt = torch.optim.AdamW(  # type: ignore[attr-defined]
         model.parameters(),
         lr=cfg["training"]["lr"],
         weight_decay=cfg["training"]["weight_decay"],
     )
-    total_steps = max_steps_override if max_steps_override else cfg["training"]["max_steps"]
-    warmup = cfg["training"]["warmup_steps"]
+    total_steps: int = max_steps_override if max_steps_override else cfg["training"]["max_steps"]
+    warmup: int = cfg["training"]["warmup_steps"]
 
-    def lr_lambda(step):
+    def lr_lambda(step: int) -> float:
         if step < warmup:
             return step / max(1, warmup)
         t = (step - warmup) / max(1, total_steps - warmup)
@@ -137,24 +213,29 @@ def train(device_arg: str | None = None, use_flash: bool = True, config_path: st
 
     sched = torch.optim.lr_scheduler.LambdaLR(opt, lr_lambda)
     loss_fn = nn.CrossEntropyLoss(ignore_index=-100)
-    save_dir = cfg["training"]["save_dir"]
+    save_dir: str = cfg["training"]["save_dir"]
     ensure_dir(save_dir)
 
-    early_stopping_patience = cfg["training"].get("early_stopping_patience", 5)
+    early_stopping_patience: int = cfg["training"].get("early_stopping_patience", 5)
     best_val_loss = float("inf")
     best_step = 0
     patience_counter = 0
     early_stop_triggered = False
-    eval_interval = cfg["training"]["eval_interval"]
+    eval_interval: int = cfg["training"]["eval_interval"]
 
-    val_losses = []
-    train_losses = []
+    val_losses: list[float] = []
+    train_losses: list[float] = []
 
     # 尝试导入 tqdm 用于进度条
     try:
         from tqdm import tqdm
-        pbar = tqdm(total=total_steps, desc="训练", unit="step",
-                     bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}] loss={postfix}")
+
+        pbar = tqdm(
+            total=total_steps,
+            desc="训练",
+            unit="step",
+            bar_format="{l_bar}{bar}| {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}] loss={postfix}",
+        )
         use_tqdm = True
     except ImportError:
         use_tqdm = False
@@ -163,6 +244,9 @@ def train(device_arg: str | None = None, use_flash: bool = True, config_path: st
     accum = 0
     model.train()
     start_time = time.time()
+
+    def save_ckpt(name: str) -> None:
+        torch.save({"model": model.state_dict(), "cfg": cfg}, os.path.join(save_dir, name))
 
     while step < total_steps and not early_stop_triggered:
         for xb, yb in train_loader:
@@ -204,10 +288,7 @@ def train(device_arg: str | None = None, use_flash: bool = True, config_path: st
                         best_val_loss = eval_loss
                         best_step = step
                         patience_counter = 0
-                        torch.save(
-                            {"model": model.state_dict(), "cfg": cfg},
-                            os.path.join(save_dir, "best.pt"),
-                        )
+                        save_ckpt("best.pt")
                         if use_tqdm:
                             pbar.write(f"  → 新的最佳模型保存 (step {step})")
                         else:
@@ -221,23 +302,17 @@ def train(device_arg: str | None = None, use_flash: bool = True, config_path: st
                             print(msg)
                         if patience_counter >= early_stopping_patience:
                             if use_tqdm:
-                                pbar.write(f"\n=== 早停触发 (step {step}) ===")
+                                pbar.write("\n=== 早停触发 (step {step}) ===")
                                 pbar.write(f"最佳验证损失: {best_val_loss:.4f} (step {best_step})")
                                 pbar.write(f"总训练时间: {elapsed:.1f}s")
                             else:
                                 print(f"\n=== 早停触发 (step {step}) ===")
                                 print(f"最佳验证损失: {best_val_loss:.4f} (step {best_step})")
                                 print(f"总训练时间: {elapsed:.1f}s")
-                            torch.save(
-                                {"model": model.state_dict(), "cfg": cfg},
-                                os.path.join(save_dir, "last.pt"),
-                            )
+                            save_ckpt("last.pt")
                             early_stop_triggered = True
 
-                    torch.save(
-                        {"model": model.state_dict(), "cfg": cfg},
-                        os.path.join(save_dir, "last.pt"),
-                    )
+                    save_ckpt("last.pt")
                     # 实时更新 loss 曲线
                     loss_curve_path = os.path.join(save_dir, "loss_curve.png")
                     plot_loss_curve(train_losses, val_losses, eval_interval, loss_curve_path)
@@ -247,13 +322,11 @@ def train(device_arg: str | None = None, use_flash: bool = True, config_path: st
     if use_tqdm:
         pbar.close()
 
-    torch.save(
-        {"model": model.state_dict(), "cfg": cfg}, os.path.join(save_dir, "last.pt")
-    )
+    save_ckpt("last.pt")
     total_elapsed = time.time() - start_time
 
-    print(f"\n{'='*50}")
-    print(f"✓ 训练完成，总用时: {total_elapsed:.1f}s ({total_elapsed/60:.1f}min)")
+    print(f"\n{'=' * 50}")
+    print(f"✓ 训练完成，总用时: {total_elapsed:.1f}s ({total_elapsed / 60:.1f}min)")
     print(f"  最佳验证损失: {best_val_loss:.4f} (step {best_step})")
 
     # 保存 loss 曲线
@@ -265,7 +338,6 @@ def train(device_arg: str | None = None, use_flash: bool = True, config_path: st
         f.write(f"{total_elapsed:.1f}\n")
 
     # 保存 loss 记录供后续分析
-    import json
     loss_data = {"train_losses": train_losses, "val_losses": val_losses, "eval_interval": eval_interval}
     with open(os.path.join(save_dir, "loss_history.json"), "w") as f:
         json.dump(loss_data, f)
@@ -273,7 +345,7 @@ def train(device_arg: str | None = None, use_flash: bool = True, config_path: st
     # 导出量化模型（需要先移到 CPU）
     try:
         model.cpu()
-        quantized = torch.quantization.quantize_dynamic(model, {nn.Linear}, dtype=torch.qint8)
+        quantized = torch.quantization.quantize_dynamic(model, {nn.Linear}, dtype=torch.qint8)  # type: ignore[attr-defined]
         torch.save(
             {"model": quantized.state_dict(), "cfg": cfg},
             os.path.join(save_dir, "quantized.pt"),
@@ -283,15 +355,16 @@ def train(device_arg: str | None = None, use_flash: bool = True, config_path: st
         print(f"  量化导出跳过: {e}")
 
     # 自动运行验收测试
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print("开始验收测试...")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
     try:
         from core.evaluate import run_test
+
         model.eval()
         # 加载 best 模型进行验收
         best_path = os.path.join(save_dir, "best.pt")
-        ckpt = torch.load(best_path, map_location="cpu", weights_only=False)
+        ckpt: dict[str, Any] = torch.load(best_path, map_location="cpu", weights_only=False)
         eval_model = GPT(
             vocab_size=tok.vocab_size,
             n_layer=cfg["model"]["n_layer"],
@@ -310,27 +383,22 @@ def train(device_arg: str | None = None, use_flash: bool = True, config_path: st
         print("可手动运行: uv run python -m core.evaluate")
 
 
-def evaluate(model, loader, loss_fn, device):
-    model.eval()
-    total = 0.0
-    count = 0
-    with torch.no_grad():
-        for xb, yb in loader:
-            xb = xb.to(device)
-            yb = yb.to(device)
-            logits, _ = model(xb)
-            loss = loss_fn(logits.view(-1, logits.size(-1)), yb.view(-1))
-            total += loss.item()
-            count += 1
-    model.train()
-    return total / max(1, count)
-
-
-if __name__ == "__main__":
+def main() -> None:
+    """命令行训练入口。"""
     ap = argparse.ArgumentParser()
     ap.add_argument("--config", type=str, default="train/config.yml", help="配置文件路径")
-    ap.add_argument("--device", type=str, default="auto", choices=["auto", "cpu", "cuda", "mps"], help="训练设备: auto(自动检测), cpu, cuda(GPU), mps(Apple M芯片)")
+    ap.add_argument(
+        "--device",
+        type=str,
+        default="auto",
+        choices=["auto", "cpu", "cuda", "mps"],
+        help="训练设备: auto(自动检测), cpu, cuda(GPU), mps(Apple M芯片)",
+    )
     ap.add_argument("--no-flash", action="store_true", help="禁用 Flash Attention")
     ap.add_argument("--max_steps", type=int, default=None, help="覆盖配置文件中的训练步数")
     args = ap.parse_args()
     train(args.device, use_flash=not args.no_flash, config_path=args.config, max_steps_override=args.max_steps)
+
+
+if __name__ == "__main__":
+    main()

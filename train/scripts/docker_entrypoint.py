@@ -1,7 +1,9 @@
 """Docker entrypoint: launch web demo."""
+
 import os
 import time
-from web.web_demo import demo
+
+from train.web_demo import demo
 
 server_name = os.environ.get("SERVER_NAME", "0.0.0.0")
 
@@ -14,6 +16,6 @@ try:
     )
 except ValueError as e:
     print(f"\nNote: Gradio health check bypassed ({e})")
-    print(f"Server is running on http://0.0.0.0:7860")
+    print("Server is running on http://0.0.0.0:7860")
     while True:
         time.sleep(3600)

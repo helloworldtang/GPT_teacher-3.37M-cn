@@ -1,23 +1,37 @@
+"""Web Demo：Gradio 交互演示（多轮对话 + 置信度 + 自洽性检测）。"""
+
 import os
+
 os.environ["GRADIO_ANALYTICS_ENABLED"] = "false"
 
-import gradio as gr
 import random
-import torch
+import socket
+import subprocess
 import time
-import os
 from collections import Counter
-from core.model import GPT
-from core.tokenizer import load_tokenizer
-from core.infer import generate
+from typing import Any
+
+import gradio as gr
 
 # gradio_client get_type() crashes when additionalProperties is bool instead of dict
 import gradio_client.utils as _gcu
+import torch
+
+from core.infer import generate
+from core.model import GPT
+from core.tokenizer import TokenizerLike, load_tokenizer
+
 _orig_get_type = _gcu.get_type
-def _safe_get_type(schema):
+
+
+def _safe_get_type(schema: Any) -> str:
+    """gradio_client 兼容补丁：schema 非字典时返回 "null"。"""
     if not isinstance(schema, dict):
         return "null"
-    return _orig_get_type(schema)
+    t: str = _orig_get_type(schema)
+    return t
+
+
 _gcu.get_type = _safe_get_type
 
 FALLBACK_ANSWERS = [
@@ -29,9 +43,16 @@ FALLBACK_ANSWERS = [
 ]
 
 
+def load_model(ckpt_path: str) -> tuple[GPT, TokenizerLike, dict[str, Any]]:
+    """从 checkpoint 恢复模型与分词器。
 
-def load_model(ckpt_path):
-    checkpoint = torch.load(ckpt_path, map_location="cpu", weights_only=False)
+    Args:
+        ckpt_path: checkpoint 路径。
+
+    Returns:
+        (模型, 分词器, 配置字典)。
+    """
+    checkpoint: dict[str, Any] = torch.load(ckpt_path, map_location="cpu", weights_only=False)
     cfg = checkpoint["cfg"]
 
     tok = load_tokenizer(
@@ -55,20 +76,25 @@ def load_model(ckpt_path):
 
 DEFAULT_CKPT = "train/checkpoints/best.pt"
 
-model = None
-tokenizer = None
-device = None
+model: GPT | None = None
+tokenizer: TokenizerLike | None = None
+device: torch.device | None = None
 model_info = ""
 
 
-def get_device():
+def get_device() -> torch.device:
+    """返回首个可用设备（cuda > mps > cpu）。"""
     return torch.device(
-        "cuda" if torch.cuda.is_available()
-        else ("mps" if torch.backends.mps.is_available() else "cpu")
+        "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
     )
 
 
-def ensure_model():
+def ensure_model() -> bool:
+    """懒加载模型：首次调用时从 DEFAULT_CKPT 恢复。
+
+    Returns:
+        模型是否可用（checkpoint 不存在时返回 False）。
+    """
     global model, tokenizer, device, model_info
     if model is None:
         if not os.path.exists(DEFAULT_CKPT):
@@ -77,12 +103,12 @@ def ensure_model():
         device = get_device()
         model.to(device)
         n_params = sum(p.numel() for p in model.parameters())
-        model_info = f"模型: {n_params/1e6:.2f}M 参数 | 设备: {device}"
+        model_info = f"模型: {n_params / 1e6:.2f}M 参数 | 设备: {device}"
     return True
 
 
-def build_multi_turn_prompt(history, new_message):
-    """将对话历史拼成模型能理解的格式：用户:Q1\n助手:A1\n用户:Q2\n助手:"""
+def build_multi_turn_prompt(history: list[Any], new_message: str) -> str:
+    """将对话历史拼成模型能理解的格式：用户:Q1\\n助手:A1\\n用户:Q2\\n助手:"""
     parts = []
     for user_msg, assistant_msg in history:
         parts.append(f"用户:{user_msg}\n助手:{assistant_msg}")
@@ -90,11 +116,33 @@ def build_multi_turn_prompt(history, new_message):
     return "\n".join(parts)
 
 
-def do_generate(prompt, temperature, top_k, top_p, max_tokens, repeat_penalty):
-    """执行推理，返回 (text, elapsed, confidence_info)"""
+def do_generate(
+    prompt: str,
+    temperature: float,
+    top_k: float,
+    top_p: float,
+    max_tokens: float,
+    repeat_penalty: float,
+) -> tuple[str, float, float | None]:
+    """执行推理。
+
+    Args:
+        prompt: 完整提示词（多轮时已拼接历史）。
+        temperature: 采样温度。
+        top_k: top-k 采样保留数。
+        top_p: nucleus 采样阈值。
+        max_tokens: 最大生成长度。
+        repeat_penalty: 重复惩罚系数。
+
+    Returns:
+        (回答文本, 耗时秒, 平均置信度)；空回答时置信度为 None。
+    """
+    assert model is not None and tokenizer is not None, "模型未加载"
     start = time.time()
     result = generate(
-        model, tokenizer, prompt,
+        model,
+        tokenizer,
+        prompt,
         max_new_tokens=int(max_tokens),
         temperature=temperature,
         top_k=int(top_k),
@@ -112,10 +160,24 @@ def do_generate(prompt, temperature, top_k, top_p, max_tokens, repeat_penalty):
     return text, elapsed, result["avg_confidence"]
 
 
-def chat(message, history, temperature, top_k, top_p, max_tokens, repeat_penalty):
+def chat(
+    message: str,
+    history: list[Any],
+    temperature: float,
+    top_k: float,
+    top_p: float,
+    max_tokens: float,
+    repeat_penalty: float,
+) -> list[Any]:
+    """多轮对话回调：拼接历史后生成回答。"""
     if not ensure_model():
         history = history or []
-        history.append([message, "错误：未找到模型文件 train/checkpoints/best.pt，请先运行训练。\n\n运行命令: uv run python -m train.train"])
+        history.append(
+            [
+                message,
+                "错误：未找到模型文件 train/checkpoints/best.pt，请先运行训练。\n\n运行命令: uv run python -m train.train",
+            ]
+        )
         return history
 
     prompt = build_multi_turn_prompt(history or [], message)
@@ -126,8 +188,10 @@ def chat(message, history, temperature, top_k, top_p, max_tokens, repeat_penalty
     return history
 
 
-def chat_simple(prompt, temperature, top_k, top_p, max_tokens, repeat_penalty):
-    """单轮问答模式，用于旧版按钮兼容"""
+def chat_simple(
+    prompt: str, temperature: float, top_k: float, top_p: float, max_tokens: float, repeat_penalty: float
+) -> tuple[str, str]:
+    """单轮问答模式，用于旧版按钮兼容。"""
     if not ensure_model():
         return "错误：未找到模型文件 train/checkpoints/best.pt，请先运行训练。", ""
 
@@ -142,16 +206,20 @@ def chat_simple(prompt, temperature, top_k, top_p, max_tokens, repeat_penalty):
     return response, model_info
 
 
-def check_consistency(prompt, max_tokens, repeat_penalty):
+def check_consistency(prompt: str, max_tokens: float, repeat_penalty: float) -> tuple[str, str]:
+    """自洽性检测：同一问题采样 5 次，统计最常见回答的占比。"""
     if not ensure_model():
         return "错误：模型未加载", ""
 
+    assert model is not None and tokenizer is not None, "模型未加载"
     start = time.time()
     n_samples = 5
     results = []
     for _ in range(n_samples):
         r = generate(
-            model, tokenizer, prompt,
+            model,
+            tokenizer,
+            prompt,
             max_new_tokens=int(max_tokens),
             temperature=0.5,
             top_k=50,
@@ -177,8 +245,10 @@ def check_consistency(prompt, max_tokens, repeat_penalty):
     else:
         verdict = f"自洽性: {most_common_count}/{n_samples} 次一致 (低可信度)"
 
-    detail = "\n".join(f"  第{i+1}次: {r}" for i, r in enumerate(results))
-    response = f"{most_common_text}\n\n---\n{verdict}\n检测耗时: {elapsed:.2f}s ({n_samples}次采样)\n\n所有回答:\n{detail}"
+    detail = "\n".join(f"  第{i + 1}次: {r}" for i, r in enumerate(results))
+    response = (
+        f"{most_common_text}\n\n---\n{verdict}\n检测耗时: {elapsed:.2f}s ({n_samples}次采样)\n\n所有回答:\n{detail}"
+    )
     return response, model_info
 
 
@@ -198,9 +268,8 @@ with gr.Blocks(
     title="GPT Teacher 教学演示",
     css="""
         .example-btn { min-width: 120px; margin: 4px; }
-    """
+    """,
 ) as demo:
-
     gr.Markdown(
         "# GPT Teacher 教学演示\n"
         "这是一个 ~3.37M 参数的微型 GPT 模型，展示了 Transformer Decoder-only 架构的推理过程。\n\n"
@@ -228,34 +297,47 @@ with gr.Blocks(
 
         with gr.Column(scale=1):
             temperature = gr.Slider(
-                0.0, 1.5, value=0.0, step=0.1,
+                0.0,
+                1.5,
+                value=0.0,
+                step=0.1,
                 label="Temperature (温度)",
                 info="0=精确复制，1=有创造性",
             )
             top_k = gr.Slider(
-                1, 100, value=50, step=1,
+                1,
+                100,
+                value=50,
+                step=1,
                 label="Top-K",
                 info="只从概率最高的K个词中选",
             )
             top_p = gr.Slider(
-                0.0, 1.0, value=0.9, step=0.05,
+                0.0,
+                1.0,
+                value=0.9,
+                step=0.05,
                 label="Top-P (核采样)",
                 info="累积概率阈值",
             )
             with gr.Accordion("高级参数", open=False):
                 max_tokens = gr.Slider(
-                    16, 256, value=128, step=16,
+                    16,
+                    256,
+                    value=128,
+                    step=16,
                     label="Max Tokens (最大生成长度)",
                     info="控制回答的最大长度",
                 )
                 repeat_penalty = gr.Slider(
-                    1.0, 2.0, value=1.5, step=0.1,
+                    1.0,
+                    2.0,
+                    value=1.5,
+                    step=0.1,
                     label="Repetition Penalty (重复惩罚)",
                     info="防止模型重复说同样的话",
                 )
-            model_info_box = gr.Markdown(
-                "模型尚未加载，点击「发送」自动加载"
-            )
+            model_info_box = gr.Markdown("模型尚未加载，点击「发送」自动加载")
 
     gr.Markdown("### 点击试试这些问题")
     with gr.Row():
@@ -270,7 +352,8 @@ with gr.Blocks(
                 [chatbot],
             ).then(
                 lambda: ensure_model() and model_info or "模型尚未加载",
-                inputs=[], outputs=[model_info_box],
+                inputs=[],
+                outputs=[model_info_box],
             ).then(lambda: "", inputs=[], outputs=[msg_input])
     with gr.Row():
         for q in EXAMPLE_QUESTIONS[4:]:
@@ -284,7 +367,8 @@ with gr.Blocks(
                 [chatbot],
             ).then(
                 lambda: ensure_model() and model_info or "模型尚未加载",
-                inputs=[], outputs=[model_info_box],
+                inputs=[],
+                outputs=[model_info_box],
             ).then(lambda: "", inputs=[], outputs=[msg_input])
 
     # 多轮对话
@@ -294,7 +378,8 @@ with gr.Blocks(
         [chatbot],
     ).then(
         lambda: ensure_model() and model_info or "模型尚未加载",
-        inputs=[], outputs=[model_info_box],
+        inputs=[],
+        outputs=[model_info_box],
     ).then(lambda: "", inputs=[], outputs=[msg_input])
 
     msg_input.submit(
@@ -303,12 +388,14 @@ with gr.Blocks(
         [chatbot],
     ).then(
         lambda: ensure_model() and model_info or "模型尚未加载",
-        inputs=[], outputs=[model_info_box],
+        inputs=[],
+        outputs=[model_info_box],
     ).then(lambda: "", inputs=[], outputs=[msg_input])
 
     clear_btn.click(
         lambda: ([], ""),
-        inputs=[], outputs=[chatbot, msg_input],
+        inputs=[],
+        outputs=[chatbot, msg_input],
     )
 
     # 单轮模式
@@ -330,17 +417,13 @@ with gr.Blocks(
 
 
 if __name__ == "__main__":
-    import os
-    import socket
-
     port = 7860
 
-    def is_port_in_use(p):
+    def is_port_in_use(p: int) -> bool:
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             return s.connect_ex(("127.0.0.1", p)) == 0
 
     if is_port_in_use(port):
-        import subprocess
         result = subprocess.run(["lsof", "-ti", f":{port}"], capture_output=True, text=True)
         pids = result.stdout.strip().split("\n")
         print(f"\n端口 {port} 已被占用 (PID: {', '.join(pids)})")
@@ -351,7 +434,7 @@ if __name__ == "__main__":
             print(f"已终止 PID {', '.join(pids)}")
         else:
             print("退出。请手动释放端口后重试。")
-            exit(0)
+            raise SystemExit(0)
 
     print("\n" + "=" * 50)
     print("  GPT Teacher Web Demo 启动成功！")

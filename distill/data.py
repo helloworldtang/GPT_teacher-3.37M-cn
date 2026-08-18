@@ -9,9 +9,9 @@
     uv run python -m distill.data --method expand --topics 30
 """
 
+import argparse
 import json
 import random
-import argparse
 
 # 原始 12 个主题
 ORIGINAL_TOPICS = [
@@ -58,8 +58,16 @@ PREFIXES = ["", "你知道", "请问", "帮我解释下", "你能告诉我", "�
 REPEATS = 4
 
 
-def generate_topic_dataset(topics, path):
-    """从主题列表生成 JSONL 数据。"""
+def generate_topic_dataset(topics: list[tuple[str, str]], path: str) -> list[dict[str, str]]:
+    """从主题列表生成 JSONL 数据（前缀变体 × 重复次数，seed=42 打乱）。
+
+    Args:
+        topics: (问题, 答案) 列表。
+        path: 输出 jsonl 路径。
+
+    Returns:
+        生成的问答对列表。
+    """
     data = []
     for question, answer in topics:
         for pf in PREFIXES:
@@ -70,13 +78,17 @@ def generate_topic_dataset(topics, path):
     with open(path, "w", encoding="utf-8") as f:
         for item in data:
             f.write(json.dumps(item, ensure_ascii=False) + "\n")
-    unique = len(set(item["completion"] for item in data))
+    unique = len({item["completion"] for item in data})
     print(f"{path}: {len(data)} 条 ({unique} 唯一答案)")
     return data
 
 
-def expand(topics_count):
-    """按主题数生成扩展数据集。"""
+def expand(topics_count: int) -> None:
+    """按主题数生成扩展数据集（>22 时追加通用主题）。
+
+    Args:
+        topics_count: 主题数量。
+    """
     if topics_count <= 12:
         topics = ORIGINAL_TOPICS[:topics_count]
     elif topics_count <= 22:
@@ -89,8 +101,12 @@ def expand(topics_count):
     print(f"生成 {topics_count} 主题数据 → {path}")
 
 
-def augment(teacher_name):
-    """用 teacher 模型生成增强训练数据。"""
+def augment(teacher_name: str) -> None:
+    """用 teacher 模型逐题生成答案，构造增强训练数据。
+
+    Args:
+        teacher_name: HuggingFace teacher 模型名。
+    """
     import torch
     from transformers import AutoModelForCausalLM, AutoTokenizer
 
@@ -106,13 +122,13 @@ def augment(teacher_name):
     # 提取唯一问题
     seen = set()
     questions = []
-    with open("train/data/train.jsonl", "r", encoding="utf-8") as f:
+    with open("train/data/train.jsonl", encoding="utf-8") as f:
         for line in f:
             obj = json.loads(line)
             q = obj["prompt"]
             for pf in PREFIXES:
                 if q.startswith(pf):
-                    q = q[len(pf):]
+                    q = q[len(pf) :]
                     break
             q = q.strip()
             if q not in seen:
@@ -130,8 +146,10 @@ def augment(teacher_name):
         text = tok.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
         inputs = tok(text, return_tensors="pt").to(model.device)
         with torch.no_grad():
-            output = model.generate(**inputs, max_new_tokens=80, temperature=0.7, top_p=0.9, do_sample=True, pad_token_id=tok.eos_token_id)
-        gen_ids = output[0][inputs["input_ids"].shape[1]:]
+            output = model.generate(
+                **inputs, max_new_tokens=80, temperature=0.7, top_p=0.9, do_sample=True, pad_token_id=tok.eos_token_id
+            )
+        gen_ids = output[0][inputs["input_ids"].shape[1] :]
         answer = tok.decode(gen_ids, skip_special_tokens=True).strip()
         for end in ["\n", "。"]:
             idx = answer.find(end, 1)
@@ -159,7 +177,8 @@ def augment(teacher_name):
     print(f"\n生成 {len(data)} 条 → {out_path}")
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """命令行入口：augment（teacher 增强）或 expand（主题扩展）。"""
     ap = argparse.ArgumentParser()
     ap.add_argument("--method", choices=["augment", "expand"], required=True)
     ap.add_argument("--teacher", default="Qwen/Qwen2.5-1.5B-Instruct")
@@ -170,3 +189,7 @@ if __name__ == "__main__":
         augment(args.teacher)
     else:
         expand(args.topics)
+
+
+if __name__ == "__main__":
+    main()

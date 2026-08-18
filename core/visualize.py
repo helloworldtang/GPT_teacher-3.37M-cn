@@ -1,30 +1,38 @@
 """核心概念可视化：让抽象理论变成看得见的图。
 
 用法：
-    uv run python -m core.visualize          # 生成全部图到 docs/
+    uv run python -m core.visualize          # 生成全部图到 train/docs/
     uv run python -m core.visualize --only causal    # 只看因果掩码
     uv run python -m core.visualize --only attention # 只看注意力权重
     uv run python -m core.visualize --only loss      # 只看 loss 曲线解读
 """
+
 import argparse
 import os
+from typing import Any
 
 try:
     import matplotlib
+
     matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
     import matplotlib.patches as mpatches
+    import matplotlib.pyplot as plt
     import numpy as np
 except ImportError:
     print("请安装 matplotlib: pip install matplotlib")
-    exit(1)
+    raise SystemExit(1) from None
 
 plt.rcParams["font.sans-serif"] = ["Arial Unicode MS", "SimHei", "PingFang SC"]
 plt.rcParams["axes.unicode_minus"] = False
 
 
-def plot_causal_mask(seq_len=16, save_dir="train/docs"):
-    """可视化因果掩码：1 表示能看到，0 表示被遮住。"""
+def plot_causal_mask(seq_len: int = 16, save_dir: str = "train/docs") -> None:
+    """可视化因果掩码：1 表示能看到，0 表示被遮住。
+
+    Args:
+        seq_len: 掩码矩阵边长。
+        save_dir: 输出目录。
+    """
     os.makedirs(save_dir, exist_ok=True)
     mask = np.tril(np.ones((seq_len, seq_len)))
 
@@ -38,8 +46,7 @@ def plot_causal_mask(seq_len=16, save_dir="train/docs"):
     ax.set_title("因果掩码（Causal Mask）")
     # 标注几个位置
     ax.annotate("自己看自己 ✓", xy=(3, 3), fontsize=9, color="white", ha="center", va="center")
-    ax.annotate("未来 ✗", xy=(12, 3), fontsize=9, color="red", ha="center", va="center",
-                fontweight="bold")
+    ax.annotate("未来 ✗", xy=(12, 3), fontsize=9, color="red", ha="center", va="center", fontweight="bold")
     ax.annotate("历史 ✓", xy=(3, 8), fontsize=9, color="white", ha="center", va="center")
 
     # 右：文字解释
@@ -56,9 +63,16 @@ def plot_causal_mask(seq_len=16, save_dir="train/docs"):
         "不可能看到第 4 个字。\n\n"
         "绿色 = 允许关注    红色 = 被遮住"
     )
-    ax2.text(0.1, 0.95, text, transform=ax2.transAxes, fontsize=11,
-             verticalalignment="top", fontfamily="sans-serif",
-             bbox=dict(boxstyle="round", facecolor="lightyellow", alpha=0.8))
+    ax2.text(
+        0.1,
+        0.95,
+        text,
+        transform=ax2.transAxes,
+        fontsize=11,
+        verticalalignment="top",
+        fontfamily="sans-serif",
+        bbox={"boxstyle": "round", "facecolor": "lightyellow", "alpha": 0.8},
+    )
 
     plt.tight_layout()
     path = os.path.join(save_dir, "causal_mask.png")
@@ -67,8 +81,12 @@ def plot_causal_mask(seq_len=16, save_dir="train/docs"):
     print(f"  因果掩码图: {path}")
 
 
-def plot_attention_weights(save_dir="train/docs"):
-    """可视化注意力权重：模型在回答时关注了哪些词。"""
+def plot_attention_weights(save_dir: str = "train/docs") -> None:
+    """可视化注意力权重：模型在回答时关注了哪些词。
+
+    Args:
+        save_dir: 输出目录。
+    """
     os.makedirs(save_dir, exist_ok=True)
 
     # 模拟一个真实场景：模型处理 "用户:什么是注意力机制？\n助手:注意力机制通过..."
@@ -79,7 +97,7 @@ def plot_attention_weights(save_dir="train/docs"):
     attn = np.random.rand(n, n) * 0.1
     for i in range(n):
         # 因果掩码
-        attn[i, i + 1:] = 0
+        attn[i, i + 1 :] = 0
         # 自注意力：同义词互相注意
         for j in range(i + 1):
             if tokens[i] == tokens[j] and i != j:
@@ -109,9 +127,14 @@ def plot_attention_weights(save_dir="train/docs"):
     plt.colorbar(im, ax=ax, label="注意力权重", shrink=0.8)
 
     # 标注
-    ax.annotate("「注意力」被强烈关注", xy=(7, 12), xytext=(14, 14),
-                arrowprops=dict(arrowstyle="->", color="red"),
-                fontsize=9, color="red")
+    ax.annotate(
+        "「注意力」被强烈关注",
+        xy=(7, 12),
+        xytext=(14, 14),
+        arrowprops={"arrowstyle": "->", "color": "red"},
+        fontsize=9,
+        color="red",
+    )
 
     plt.tight_layout()
     path = os.path.join(save_dir, "attention_weights.png")
@@ -120,13 +143,21 @@ def plot_attention_weights(save_dir="train/docs"):
     print(f"  注意力权重图: {path}")
 
 
-def plot_loss_interpretation(save_dir="train/docs"):
-    """解读 loss 曲线：每个阶段意味着什么。"""
+def plot_loss_interpretation(save_dir: str = "train/docs") -> None:
+    """解读 loss 曲线：每个阶段意味着什么。
+
+    优先读取 train/checkpoints/loss_history.json 的真实训练记录，
+    不存在时用模拟曲线演示。
+
+    Args:
+        save_dir: 输出目录。
+    """
     os.makedirs(save_dir, exist_ok=True)
 
     loss_path = os.path.join("train/checkpoints", "loss_history.json")
     if os.path.exists(loss_path):
         import json
+
         with open(loss_path) as f:
             data = json.load(f)
         train_losses = data["train_losses"]
@@ -144,8 +175,13 @@ def plot_loss_interpretation(save_dir="train/docs"):
 
     steps_train = list(range(1, len(train_losses) + 1))
     ax.plot(steps_train, train_losses, alpha=0.3, label="训练 Loss", color="blue")
-    ax.plot(steps_train, [sum(train_losses[max(0, i - 10):i + 1]) / min(i + 1, 10) for i in range(len(train_losses))],
-            color="blue", linewidth=2, label="训练 Loss（平滑）")
+    ax.plot(
+        steps_train,
+        [sum(train_losses[max(0, i - 10) : i + 1]) / min(i + 1, 10) for i in range(len(train_losses))],
+        color="blue",
+        linewidth=2,
+        label="训练 Loss（平滑）",
+    )
 
     val_steps = list(range(eval_interval, eval_interval * (len(val_losses) + 1), eval_interval))
     ax.plot(val_steps, val_losses, "o-", label="验证 Loss", color="orange", markersize=3)
@@ -156,12 +192,20 @@ def plot_loss_interpretation(save_dir="train/docs"):
     ax.axvspan(1000, len(train_losses), alpha=0.1, color="green", label="精细收敛")
 
     # 标注关键点
-    ax.annotate("模型开始「理解」数据模式\nloss 快速下降",
-                xy=(300, 1.0), fontsize=9, color="darkblue",
-                bbox=dict(boxstyle="round,pad=0.3", facecolor="lightyellow"))
-    ax.annotate("收敛：模型已经\n学到了能学的全部",
-                xy=(2000, val_losses[-1] if val_losses else 0.05), fontsize=9, color="green",
-                bbox=dict(boxstyle="round,pad=0.3", facecolor="lightgreen"))
+    ax.annotate(
+        "模型开始「理解」数据模式\nloss 快速下降",
+        xy=(300, 1.0),
+        fontsize=9,
+        color="darkblue",
+        bbox={"boxstyle": "round,pad=0.3", "facecolor": "lightyellow"},
+    )
+    ax.annotate(
+        "收敛：模型已经\n学到了能学的全部",
+        xy=(2000, val_losses[-1] if val_losses else 0.05),
+        fontsize=9,
+        color="green",
+        bbox={"boxstyle": "round,pad=0.3", "facecolor": "lightgreen"},
+    )
 
     ax.set_xlabel("训练步数")
     ax.set_ylabel("Loss（越小越好）")
@@ -176,8 +220,12 @@ def plot_loss_interpretation(save_dir="train/docs"):
     print(f"  Loss 曲线解读图: {path}")
 
 
-def plot_model_structure(save_dir="train/docs"):
-    """可视化模型结构：数据从输入到输出的流程。"""
+def plot_model_structure(save_dir: str = "train/docs") -> None:
+    """可视化模型结构：数据从输入到输出的流程。
+
+    Args:
+        save_dir: 输出目录。
+    """
     os.makedirs(save_dir, exist_ok=True)
 
     fig, ax = plt.subplots(figsize=(14, 8))
@@ -187,27 +235,30 @@ def plot_model_structure(save_dir="train/docs"):
 
     # 绘制流程
     blocks = [
-        (5, 9.0, "输入：\"什么是注意力机制？\"", "lightblue"),
-        (5, 7.8, "分词器 → Token IDs", "lightyellow"),
-        (5, 6.6, "词嵌入 (Embedding)", "lightgreen"),
-        (5, 5.4, "×4 层 Transformer Block", "lightsalmon"),
-        (5, 4.2, "RMSNorm 归一化", "lightyellow"),
-        (5, 3.0, "LM Head → 预测下一个词的概率", "lightgreen"),
-        (5, 1.8, "输出：\"注意力机制通过计算...\"", "lightblue"),
+        (5.0, 9.0, '输入："什么是注意力机制？"', "lightblue"),
+        (5.0, 7.8, "分词器 → Token IDs", "lightyellow"),
+        (5.0, 6.6, "词嵌入 (Embedding)", "lightgreen"),
+        (5.0, 5.4, "×4 层 Transformer Block", "lightsalmon"),
+        (5.0, 4.2, "RMSNorm 归一化", "lightyellow"),
+        (5.0, 3.0, "LM Head → 预测下一个词的概率", "lightgreen"),
+        (5.0, 1.8, '输出："注意力机制通过计算..."', "lightblue"),
     ]
 
     for x, y, text, color in blocks:
-        box = mpatches.FancyBboxPatch((x - 2.5, y - 0.4), 5, 0.8,
-                                       boxstyle="round,pad=0.1",
-                                       facecolor=color, edgecolor="gray")
+        box = mpatches.FancyBboxPatch(
+            (x - 2.5, y - 0.4), 5, 0.8, boxstyle="round,pad=0.1", facecolor=color, edgecolor="gray"
+        )
         ax.add_patch(box)
         ax.text(x, y, text, ha="center", va="center", fontsize=11)
 
     # 箭头
     for i in range(len(blocks) - 1):
-        ax.annotate("", xy=(5, blocks[i + 1][1] + 0.45),
-                    xytext=(5, blocks[i][1] - 0.45),
-                    arrowprops=dict(arrowstyle="->", color="gray", lw=1.5))
+        ax.annotate(
+            "",
+            xy=(5, blocks[i + 1][1] + 0.45),
+            xytext=(5, blocks[i][1] - 0.45),
+            arrowprops={"arrowstyle": "->", "color": "gray", "lw": 1.5},
+        )
 
     # Transformer Block 展开
     sub_blocks = [
@@ -222,16 +273,19 @@ def plot_model_structure(save_dir="train/docs"):
     ax.text(7.7, 5.6, "展开", fontsize=9, color="gray")
 
     for x, y, text, w in sub_blocks:
-        box = mpatches.FancyBboxPatch((x - w, y - 0.25), w * 2, 0.5,
-                                       boxstyle="round,pad=0.05",
-                                       facecolor="mistyrose", edgecolor="gray", alpha=0.8)
+        box = mpatches.FancyBboxPatch(
+            (x - w, y - 0.25), w * 2, 0.5, boxstyle="round,pad=0.05", facecolor="mistyrose", edgecolor="gray", alpha=0.8
+        )
         ax.add_patch(box)
         ax.text(x, y, text, ha="center", va="center", fontsize=9)
 
     for i in range(len(sub_blocks) - 1):
-        ax.annotate("", xy=(8.5, sub_blocks[i + 1][1] + 0.3),
-                    xytext=(8.5, sub_blocks[i][1] - 0.3),
-                    arrowprops=dict(arrowstyle="->", color="gray", lw=1))
+        ax.annotate(
+            "",
+            xy=(8.5, sub_blocks[i + 1][1] + 0.3),
+            xytext=(8.5, sub_blocks[i][1] - 0.3),
+            arrowprops={"arrowstyle": "->", "color": "gray", "lw": 1},
+        )
 
     ax.set_title("GPT 模型结构：从输入到输出的完整流程", fontsize=14, fontweight="bold")
 
@@ -242,10 +296,23 @@ def plot_model_structure(save_dir="train/docs"):
     print(f"  模型结构图: {path}")
 
 
-def plot_real_attention(ckpt_path="train/checkpoints/best.pt", prompt="什么是注意力机制？", save_dir="train/docs"):
-    """从训练好的模型中提取真实注意力权重并可视化。"""
+def plot_real_attention(
+    ckpt_path: str = "train/checkpoints/best.pt", prompt: str = "什么是注意力机制？", save_dir: str = "train/docs"
+) -> None:
+    """从训练好的模型中提取真实注意力权重并可视化。
+
+    通过 forward hook 临时关闭 Flash Attention，逐层捕获注意力矩阵，
+    输出每层热力图与四层总览图。
+
+    Args:
+        ckpt_path: checkpoint 路径，不存在时跳过。
+        prompt: 用于可视化的问题。
+        save_dir: 输出目录。
+    """
     import torch
-    from core.model import GPT, rope as apply_rope
+
+    from core.model import GPT
+    from core.model import rope as apply_rope
     from core.tokenizer import load_tokenizer
 
     os.makedirs(save_dir, exist_ok=True)
@@ -272,14 +339,15 @@ def plot_real_attention(ckpt_path="train/checkpoints/best.pt", prompt="什么是
     model.load_state_dict(checkpoint["model"])
     model.eval()
 
-    prefix = [tok.bos_id] + tok.encode("用户:" + prompt + "\n助手:", add_special_tokens=False)
+    assert tok.bos_id is not None, "分词器缺少 BOS 特殊 token"
+    prefix: list[int] = [tok.bos_id, *tok.encode("用户:" + prompt + "\n助手:", add_special_tokens=False)]
     x = torch.tensor(prefix, dtype=torch.long).unsqueeze(0)
 
-    captured_weights = []
+    captured_weights: list[Any] = []
 
-    def make_hook(layer_idx):
-        def hook(module, input, output):
-            h = input[0]
+    def make_hook(layer_idx: int) -> Any:
+        def hook(module: Any, inputs: Any, output: Any) -> None:
+            h = inputs[0]
             B, T, C = h.shape
             q = module.wq(h).view(B, T, module.n_head, module.head_dim)
             k = module.wk(h).view(B, T, module.n_kv_head, module.head_dim)
@@ -287,11 +355,12 @@ def plot_real_attention(ckpt_path="train/checkpoints/best.pt", prompt="什么是
             k = module._repeat_kv(k)
             q = q.transpose(1, 2)
             k = k.transpose(1, 2)
-            scores = (q @ k.transpose(-2, -1)) * (module.head_dim ** -0.5)
-            mask = torch.tril(torch.ones(T, T, device=h.device))
-            scores = scores.masked_fill(mask == 0, float("-inf"))
+            scores = (q @ k.transpose(-2, -1)) * (module.head_dim**-0.5)
+            causal = torch.tril(torch.ones(T, T, device=h.device))
+            scores = scores.masked_fill(causal == 0, float("-inf"))
             weights = torch.softmax(scores, dim=-1)
             captured_weights.append(weights[0].detach().numpy())
+
         return hook
 
     handles = []
@@ -306,7 +375,7 @@ def plot_real_attention(ckpt_path="train/checkpoints/best.pt", prompt="什么是
 
     for h in handles:
         h.remove()
-    for block, flash in zip(model.blocks, original_flash):
+    for block, flash in zip(model.blocks, original_flash, strict=False):
         block.attn.use_flash = flash
 
     tokens = []
@@ -343,7 +412,7 @@ def plot_real_attention(ckpt_path="train/checkpoints/best.pt", prompt="什么是
     fig, axes = plt.subplots(1, n_layers, figsize=(5 * n_layers, 5))
     if n_layers == 1:
         axes = [axes]
-    for layer_idx, (ax, weights) in enumerate(zip(axes, captured_weights)):
+    for layer_idx, (ax, weights) in enumerate(zip(axes, captured_weights, strict=False)):
         avg = weights.mean(axis=0)
         ax.imshow(avg, cmap="Blues", vmin=0)
         ax.set_title(f"第 {layer_idx + 1} 层")
@@ -359,8 +428,16 @@ def plot_real_attention(ckpt_path="train/checkpoints/best.pt", prompt="什么是
     print(f"  注意力总览: {path}")
 
 
-def plot_tokenizer(text="注意力机制通过计算相关性分配权重", tok_path="train/tokenizer.json", save_dir="train/docs"):
-    """可视化 BPE 分词：展示文本如何被切分成 token。"""
+def plot_tokenizer(
+    text: str = "注意力机制通过计算相关性分配权重", tok_path: str = "train/tokenizer.json", save_dir: str = "train/docs"
+) -> None:
+    """可视化 BPE 分词：展示文本如何被切分成 token。
+
+    Args:
+        text: 待分词的文本。
+        tok_path: tokenizer.json 路径，不存在时跳过。
+        save_dir: 输出目录。
+    """
     from core.tokenizer import load_tokenizer
 
     os.makedirs(save_dir, exist_ok=True)
@@ -380,31 +457,44 @@ def plot_tokenizer(text="注意力机制通过计算相关性分配权重", tok_
             token_pairs.append((f"<{tid}>", tid))
 
     fig, (ax_top, ax_mid, ax_bot) = plt.subplots(
-        3, 1, figsize=(14, 5), gridspec_kw={"height_ratios": [1, 2, 1.2]},
+        3,
+        1,
+        figsize=(14, 5),
+        gridspec_kw={"height_ratios": [1, 2, 1.2]},
     )
 
     # 原始文本
     ax_top.axis("off")
-    ax_top.text(0.5, 0.5, f"原始文本：{text}\n共 {len(text)} 个字符", transform=ax_top.transAxes,
-                fontsize=13, ha="center", va="center",
-                bbox=dict(boxstyle="round,pad=0.4", facecolor="lightyellow"))
+    ax_top.text(
+        0.5,
+        0.5,
+        f"原始文本：{text}\n共 {len(text)} 个字符",
+        transform=ax_top.transAxes,
+        fontsize=13,
+        ha="center",
+        va="center",
+        bbox={"boxstyle": "round,pad=0.4", "facecolor": "lightyellow"},
+    )
 
     # Token 色块
     ax_mid.axis("off")
-    colors = plt.cm.Set3(np.linspace(0, 1, max(len(token_pairs), 1)))
-    x_pos = 0
+    set3_cmap = plt.cm.Set3  # type: ignore[attr-defined]
+    colors = set3_cmap(np.linspace(0, 1, max(len(token_pairs), 1)))
+    x_pos = 0.0
     for i, (token_text, token_id) in enumerate(token_pairs):
         width = max(len(token_text) * 0.45, 1.2)
         rect = mpatches.FancyBboxPatch(
-            (x_pos, 0.3), width, 0.4,
+            (x_pos, 0.3),
+            width,
+            0.4,
             boxstyle="round,pad=0.05",
-            facecolor=colors[i % len(colors)], edgecolor="gray", linewidth=0.8,
+            facecolor=colors[i % len(colors)],
+            edgecolor="gray",
+            linewidth=0.8,
         )
         ax_mid.add_patch(rect)
-        ax_mid.text(x_pos + width / 2, 0.55, token_text,
-                    ha="center", va="center", fontsize=11)
-        ax_mid.text(x_pos + width / 2, 0.15, f"ID:{token_id}",
-                    ha="center", va="center", fontsize=7, color="gray")
+        ax_mid.text(x_pos + width / 2, 0.55, token_text, ha="center", va="center", fontsize=11)
+        ax_mid.text(x_pos + width / 2, 0.15, f"ID:{token_id}", ha="center", va="center", fontsize=7, color="gray")
         x_pos += width + 0.15
     ax_mid.set_xlim(-0.3, x_pos)
     ax_mid.set_ylim(-0.05, 1.0)
@@ -416,9 +506,17 @@ def plot_tokenizer(text="注意力机制通过计算相关性分配权重", tok_
     info_text = f"Token 映射：{info}"
     if len(info_text) > 200:
         info_text = info_text[:200] + "..."
-    ax_bot.text(0.5, 0.5, info_text, transform=ax_bot.transAxes,
-                fontsize=8, ha="center", va="center", color="gray",
-                bbox=dict(boxstyle="round,pad=0.3", facecolor="whitesmoke"))
+    ax_bot.text(
+        0.5,
+        0.5,
+        info_text,
+        transform=ax_bot.transAxes,
+        fontsize=8,
+        ha="center",
+        va="center",
+        color="gray",
+        bbox={"boxstyle": "round,pad=0.3", "facecolor": "whitesmoke"},
+    )
 
     fig.suptitle("BPE 分词器可视化：文本如何变成模型的输入", fontsize=13, fontweight="bold")
     plt.tight_layout()
@@ -428,11 +526,15 @@ def plot_tokenizer(text="注意力机制通过计算相关性分配权重", tok_
     print(f"  分词器可视化: {path}")
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """命令行可视化入口。"""
     ap = argparse.ArgumentParser(description="核心概念可视化")
-    ap.add_argument("--only", choices=["causal", "attention", "loss", "structure", "real_attention", "tokenizer"],
-                    help="只生成指定的图")
-    ap.add_argument("--dir", default="docs", help="输出目录")
+    ap.add_argument(
+        "--only",
+        choices=["causal", "attention", "loss", "structure", "real_attention", "tokenizer"],
+        help="只生成指定的图",
+    )
+    ap.add_argument("--dir", default="train/docs", help="输出目录")
     ap.add_argument("--ckpt", default="train/checkpoints/best.pt", help="模型路径（真实注意力可视化用）")
     ap.add_argument("--prompt", default="什么是注意力机制？", help="输入文本（可视化用）")
     args = ap.parse_args()
@@ -450,4 +552,8 @@ if __name__ == "__main__":
         plot_real_attention(ckpt_path=args.ckpt, prompt=args.prompt, save_dir=args.dir)
     if args.only == "tokenizer":
         plot_tokenizer(text=args.prompt, save_dir=args.dir)
-    print("完成！图表保存在 docs/ 目录。")
+    print(f"完成！图表保存在 {args.dir} 目录。")
+
+
+if __name__ == "__main__":
+    main()

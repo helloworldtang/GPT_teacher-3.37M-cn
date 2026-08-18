@@ -1,5 +1,6 @@
 import torch
-from core.model import RMSNorm, rope, SelfAttention, MLP, Block, GPT
+
+from core.model import MLP, Block, RMSNorm, SelfAttention, rope
 
 
 class TestRMSNorm:

@@ -1,5 +1,5 @@
 import pytest
-import torch
+
 from core.model import GPT
 from core.tokenizer import ByteTokenizer
 

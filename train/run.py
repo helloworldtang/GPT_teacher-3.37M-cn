@@ -1,25 +1,33 @@
 #!/usr/bin/env python3
-"""一键启动：构建分词器 → 训练 → 验收 → 启动 Web Demo"""
-import sys
+"""一键启动：构建分词器 → 训练 → 验收 → 启动 Web Demo。"""
+
+import argparse
+import os
 import subprocess
+import sys
 
 
-def run(cmd, desc):
-    print(f"\n{'='*50}")
+def run(cmd: str, desc: str) -> None:
+    """执行 shell 命令，失败时终止整个流程。
+
+    Args:
+        cmd: 要执行的命令。
+        desc: 步骤描述（用于打印）。
+    """
+    print(f"\n{'=' * 50}")
     print(f"步骤: {desc}")
     print(f"命令: {cmd}")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
     result = subprocess.run(cmd, shell=True)
     if result.returncode != 0:
         print(f"错误: {desc} 失败 (退出码 {result.returncode})")
         sys.exit(result.returncode)
 
 
-def main():
-    import argparse
+def main() -> None:
+    """命令行入口：按需构建分词器、训练并启动 Web Demo。"""
     ap = argparse.ArgumentParser(description="GPT Teacher 一键启动")
-    ap.add_argument("--device", default="auto", choices=["auto", "cpu", "cuda", "mps"],
-                    help="训练设备 (默认: auto)")
+    ap.add_argument("--device", default="auto", choices=["auto", "cpu", "cuda", "mps"], help="训练设备 (默认: auto)")
     ap.add_argument("--skip-train", action="store_true", help="跳过训练，直接启动 Web Demo")
     ap.add_argument("--skip-web", action="store_true", help="训练完成后不启动 Web Demo")
     ap.add_argument("--config", default="train/config.yml", help="配置文件路径")
@@ -29,7 +37,6 @@ def main():
 
     if not args.skip_train:
         # 1. 构建分词器（如果不存在）
-        import os
         if not os.path.exists("train/tokenizer.json"):
             run(f"{prefix} -m core.build_tokenizer", "构建中文分词器")
         else:
@@ -40,11 +47,11 @@ def main():
 
     # 3. 启动 Web Demo
     if not args.skip_web:
-        print(f"\n{'='*50}")
+        print(f"\n{'=' * 50}")
         print("启动 Web Demo...")
         print("打开浏览器访问: http://127.0.0.1:7860")
         print("按 Ctrl+C 停止")
-        print(f"{'='*50}")
+        print(f"{'=' * 50}")
         run(f"{prefix} -m train.web_demo", "Web Demo")
 
 

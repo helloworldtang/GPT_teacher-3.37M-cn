@@ -6,16 +6,23 @@
 """
 
 import argparse
+from typing import Any
+
 import torch
 from transformers import AutoTokenizer
 
-from core.model import GPT
 from core.infer import generate
+from core.model import GPT
 
 TEACHER_MODEL = "uer/gpt2-chinese-cluecorpussmall"
 
 
-def adapt_tokenizer(tok):
+def adapt_tokenizer(tok: Any) -> Any:
+    """把 HF tokenizer 适配为 core.infer.generate 需要的接口。
+
+    附加 bos_id/eos_id/pad_id 属性（缺失时用 eos/0 兜底），
+    并补齐 encode/decode/vocab_size（HF tokenizer 已有）。
+    """
     bos = tok.bos_token_id or tok.eos_token_id or 0
     eos = tok.eos_token_id or tok.sep_token_id or bos
     pad = tok.pad_token_id or eos
@@ -25,7 +32,8 @@ def adapt_tokenizer(tok):
     return tok
 
 
-def main():
+def main() -> None:
+    """命令行入口：批量跑测试问题（或 --prompt 单题）并打印置信度。"""
     ap = argparse.ArgumentParser()
     ap.add_argument("--ckpt", default="distill/checkpoints/distill_best.pt")
     ap.add_argument("--prompt", type=str, default=None)
@@ -74,7 +82,9 @@ def main():
     print("=" * 50)
     for p in prompts:
         result = generate(
-            model, tok, p,
+            model,
+            tok,
+            p,
             max_new_tokens=args.max_new_tokens,
             temperature=args.temperature,
             top_k=args.top_k,
