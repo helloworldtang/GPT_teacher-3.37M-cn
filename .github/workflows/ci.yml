@@ -25,28 +25,31 @@ jobs:
         run: uv python install ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: uv sync
+        run: uv sync --extra dev
+
+      - name: Run unit tests
+        run: uv run pytest core/tests/ -q
 
       - name: Check imports
         run: |
           uv run python -c "
-          from src.model import GPT
-          from src.data import build_datasets
-          from src.tokenizer import load_tokenizer
-          from src.infer import generate
-          from src.evaluate import run_test
+          from core.model import GPT
+          from core.data import build_datasets
+          from core.tokenizer import load_tokenizer
+          from core.infer import generate
+          from core.evaluate import run_test
           print('All imports OK')
           "
 
-      - name: Generate training data
-        run: uv run python data/prepare_data.py
+      - name: Regenerate training data
+        run: uv run python train/data/prepare_data.py
 
-      - name: Build tokenizer
-        run: uv run python -m src.build_tokenizer
+      - name: Rebuild tokenizer
+        run: uv run python -m core.build_tokenizer
 
       - name: Quick training smoke test (50 steps)
-        run: uv run python -m src.train --max_steps 50 --device cpu
+        run: uv run python -m train.train --max_steps 50 --device cpu
         timeout-minutes: 10
 
       - name: Run evaluation
-        run: uv run python -m src.evaluate --ckpt checkpoints/best.pt
+        run: uv run python -m core.evaluate
