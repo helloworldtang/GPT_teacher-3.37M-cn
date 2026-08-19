@@ -7,7 +7,7 @@ from typing import Any
 
 import torch
 
-from core.infer import generate
+from core.infer import generate, warn_tokenizer_mismatch
 from core.model import GPT
 from core.tokenizer import TokenizerLike, load_tokenizer
 
@@ -29,6 +29,7 @@ def load_model(ckpt_path: str = "train/checkpoints/best.pt") -> tuple[GPT, Token
         print("请先运行训练：uv run python -m train.train")
         raise SystemExit(1)
     checkpoint: dict[str, Any] = torch.load(ckpt_path, map_location="cpu", weights_only=False)
+    warn_tokenizer_mismatch(checkpoint)
     cfg: dict[str, Any] = checkpoint["cfg"]
     tok = load_tokenizer(
         cfg.get("tokenizer", {}).get("type", "byte"),

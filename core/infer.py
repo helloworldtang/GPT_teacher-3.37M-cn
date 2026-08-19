@@ -10,6 +10,7 @@ import torch
 
 from core.model import GPT, KvCache
 from core.tokenizer import TokenizerLike, load_tokenizer
+from core.utils import file_md5
 
 try:
     from safetensors.torch import load_file as load_safetensors
@@ -62,6 +63,27 @@ def load_checkpoint(path: str) -> dict[str, Any]:
         return {"model": state_dict, "cfg": cfg}
     ckpt: dict[str, Any] = torch.load(path, map_location="cpu", weights_only=False)
     return ckpt
+
+
+def warn_tokenizer_mismatch(checkpoint: dict[str, Any]) -> None:
+    """校验磁盘上的 tokenizer 与 checkpoint 训练时是否一致，不一致打印显式警告。
+
+    tokenizer、数据与模型权重必须配套演进：词表漂移后旧权重照常加载、
+    推理输出静默损坏（实验实证：数据 600→800 条时词表 751→770、672 个
+    id 映射变化）。该校验把这种静默失效变成显式警告。
+
+    Args:
+        checkpoint: load_checkpoint 返回的字典，含训练时记录的 fingerprint。
+    """
+    fp = checkpoint.get("fingerprint") or {}
+    expected = fp.get("tokenizer_md5")
+    if not expected:
+        return  # 旧 checkpoint 无指纹，跳过
+    tok_path = (checkpoint.get("cfg") or {}).get("tokenizer", {}).get("path")
+    current = file_md5(tok_path)
+    if current != expected:
+        print(f"⚠️  警告: 分词器与 checkpoint 不配套（当前 {current} vs 训练时 {expected}）")
+        print(f"   {tok_path} 的词表已漂移，推理输出将静默损坏；请还原训练时分词器或重新训练")
 
 
 def _is_punct_token(tok: TokenizerLike, tid: int) -> bool:
@@ -259,6 +281,7 @@ def main() -> None:
     ap.add_argument("--device", type=str, default="auto", choices=["auto", "cpu"])
     args = ap.parse_args()
     obj = load_checkpoint(args.ckpt)
+    warn_tokenizer_mismatch(obj)
     cfg = obj["cfg"]
     tok = load_tokenizer(cfg.get("tokenizer", {}).get("type", "byte"), cfg.get("tokenizer", {}).get("path"))
     m = GPT(

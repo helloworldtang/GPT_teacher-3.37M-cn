@@ -17,7 +17,7 @@ import gradio as gr
 import gradio_client.utils as _gcu
 import torch
 
-from core.infer import generate
+from core.infer import generate, warn_tokenizer_mismatch
 from core.model import GPT
 from core.tokenizer import TokenizerLike, load_tokenizer
 
@@ -53,6 +53,7 @@ def load_model(ckpt_path: str) -> tuple[GPT, TokenizerLike, dict[str, Any]]:
         (模型, 分词器, 配置字典)。
     """
     checkpoint: dict[str, Any] = torch.load(ckpt_path, map_location="cpu", weights_only=False)
+    warn_tokenizer_mismatch(checkpoint)
     cfg = checkpoint["cfg"]
 
     tok = load_tokenizer(

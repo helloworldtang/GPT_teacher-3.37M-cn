@@ -1,5 +1,6 @@
-"""通用工具：随机种子、目录、CPU 线程数。"""
+"""通用工具：随机种子、目录、文件指纹、CPU 线程数。"""
 
+import hashlib
 import os
 import random
 
@@ -36,3 +37,18 @@ def num_threads() -> int:
         return os.cpu_count() or 1
     except Exception:
         return 1
+
+
+def file_md5(path: str | None) -> str | None:
+    """计算文件 md5 指纹（前 12 位），文件不存在返回 None。
+
+    Args:
+        path: 文件路径。
+
+    Returns:
+        md5 前 12 位十六进制，或 None。
+    """
+    if not path or not os.path.exists(path):
+        return None
+    with open(path, "rb") as f:
+        return hashlib.md5(f.read()).hexdigest()[:12]

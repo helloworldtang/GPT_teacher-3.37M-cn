@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import math
 import os
@@ -18,15 +17,7 @@ from torch.utils.data import DataLoader
 
 from core.data import build_datasets, collate
 from core.model import GPT
-from core.utils import ensure_dir, num_threads, set_seed
-
-
-def _file_md5(path: str | None) -> str | None:
-    """计算文件 md5 指纹（前 12 位），文件不存在返回 None。"""
-    if not path or not os.path.exists(path):
-        return None
-    with open(path, "rb") as f:
-        return hashlib.md5(f.read()).hexdigest()[:12]
+from core.utils import ensure_dir, file_md5, num_threads, set_seed
 
 
 def _git_hash() -> str | None:
@@ -53,9 +44,9 @@ def build_fingerprint(cfg: dict[str, Any]) -> dict[str, Any]:
     tok_path = cfg.get("tokenizer", {}).get("path")
     return {
         "git": _git_hash(),
-        "train_data_md5": _file_md5(cfg["data"]["train_path"]),
-        "val_data_md5": _file_md5(cfg["data"]["val_path"]),
-        "tokenizer_md5": _file_md5(tok_path),
+        "train_data_md5": file_md5(cfg["data"]["train_path"]),
+        "val_data_md5": file_md5(cfg["data"]["val_path"]),
+        "tokenizer_md5": file_md5(tok_path),
     }
 
 
