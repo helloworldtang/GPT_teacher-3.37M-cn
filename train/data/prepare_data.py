@@ -134,7 +134,9 @@ def main() -> None:
     save_jsonl(train_data, "train/data/train.jsonl")
     save_jsonl(val_data, "train/data/val.jsonl")
     save_jsonl(test_data, "train/data/test.jsonl")
-    print(f"数据准备完成：训练集 {len(train_data)} 条（含 {200} 条两轮样本），验证集 {len(val_data)} 条，测试集 {len(test_data)} 条")
+    print(
+        f"数据准备完成：训练集 {len(train_data)} 条（含 {200} 条两轮样本），验证集 {len(val_data)} 条，测试集 {len(test_data)} 条"
+    )
 
 
 if __name__ == "__main__":
