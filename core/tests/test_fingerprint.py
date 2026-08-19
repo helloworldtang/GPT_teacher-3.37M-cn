@@ -8,8 +8,10 @@ class TestFileMd5:
     def test_existing_file(self, tmp_path):
         f = tmp_path / "a.txt"
         f.write_text("hello")
-        assert file_md5(str(f)) == file_md5(str(f))  # 确定性
-        assert len(file_md5(str(f))) == 12
+        digest = file_md5(str(f))
+        assert digest is not None
+        assert digest == file_md5(str(f))  # 确定性
+        assert len(digest) == 12
 
     def test_missing_file_returns_none(self):
         assert file_md5("/nonexistent/path") is None
