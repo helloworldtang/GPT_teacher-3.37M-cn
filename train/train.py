@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import os
+import subprocess
 import time
 from typing import Any
 
@@ -17,6 +19,44 @@ from torch.utils.data import DataLoader
 from core.data import build_datasets, collate
 from core.model import GPT
 from core.utils import ensure_dir, num_threads, set_seed
+
+
+def _file_md5(path: str | None) -> str | None:
+    """计算文件 md5 指纹（前 12 位），文件不存在返回 None。"""
+    if not path or not os.path.exists(path):
+        return None
+    with open(path, "rb") as f:
+        return hashlib.md5(f.read()).hexdigest()[:12]
+
+
+def _git_hash() -> str | None:
+    """返回当前 git commit 短 hash，非 git 环境返回 None。"""
+    try:
+        r = subprocess.run(["git", "rev-parse", "--short", "HEAD"], capture_output=True, text=True, timeout=5)
+        return r.stdout.strip() if r.returncode == 0 else None
+    except Exception:
+        return None
+
+
+def build_fingerprint(cfg: dict[str, Any]) -> dict[str, Any]:
+    """构建 checkpoint 版本指纹：代码/数据/分词器的版本坐标。
+
+    tokenizer、数据与模型权重必须配套演进（词表变化会使旧权重静默失效），
+    指纹让每个 checkpoint 自带完整来源信息，支持审计与复算。
+
+    Args:
+        cfg: 训练配置。
+
+    Returns:
+        含 git hash、训练/验证数据 md5、tokenizer md5 的字典。
+    """
+    tok_path = cfg.get("tokenizer", {}).get("path")
+    return {
+        "git": _git_hash(),
+        "train_data_md5": _file_md5(cfg["data"]["train_path"]),
+        "val_data_md5": _file_md5(cfg["data"]["val_path"]),
+        "tokenizer_md5": _file_md5(tok_path),
+    }
 
 
 def load_config(path: str) -> dict[str, Any]:
@@ -155,6 +195,8 @@ def train(
     if config_path is None:
         config_path = "train/config.yml"
     cfg = load_config(config_path)
+    fp = build_fingerprint(cfg)
+    print(f"版本指纹: git={fp['git']} data={fp['train_data_md5']} tokenizer={fp['tokenizer_md5']}")
     set_seed(cfg["training"]["seed"])
     torch.set_num_threads(num_threads())
     tok, train_ds, val_ds = build_datasets(cfg)
@@ -246,7 +288,7 @@ def train(
     start_time = time.time()
 
     def save_ckpt(name: str) -> None:
-        torch.save({"model": model.state_dict(), "cfg": cfg}, os.path.join(save_dir, name))
+        torch.save({"model": model.state_dict(), "cfg": cfg, "fingerprint": fp}, os.path.join(save_dir, name))
 
     while step < total_steps and not early_stop_triggered:
         for xb, yb in train_loader:
