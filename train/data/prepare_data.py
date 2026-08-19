@@ -83,6 +83,38 @@ def save_jsonl(data: list[dict[str, Any]], path: str) -> None:
             f.write(json.dumps(item, ensure_ascii=False) + "\n")
 
 
+def build_multi_turn_samples(base_data: list[dict[str, str]], count: int = 200) -> list[dict[str, str]]:
+    """生成两轮对话样本：第一轮作为上下文，只学第二轮答案。
+
+    样本表达为 prompt="Q1\\n助手:A1\\n用户:Q2"（InstructDataset 会补首尾的
+    "用户:"/"\\n助手:" 包装，掩码只对 completion 计算 loss），与推理时
+    build_multi_turn_prompt 的拼接格式完全一致。
+
+    Args:
+        base_data: 基础问答对（要求两轮问题不同）。
+        count: 生成的两轮样本数。
+
+    Returns:
+        两轮对话样本列表。
+    """
+    samples: list[dict[str, str]] = []
+    seen_pairs: set[tuple[str, str]] = set()
+    while len(samples) < count:
+        first, second = random.sample(base_data, 2)
+        pair_key = (first["prompt"], second["prompt"])
+        if pair_key in seen_pairs:
+            continue
+        prompt = f"{first['prompt']}\n助手:{first['completion']}\n用户:{second['prompt']}"
+        full_text = f"用户:{prompt}\n助手:{second['completion']}"
+        # 两轮全文需在 seq_len=128 内（BPE 最坏 ~1.35 token/字符，保守限 95 字符），
+        # 超长样本会被截断成"只有前缀没有答案"的废样本
+        if len(full_text) > 95:
+            continue
+        seen_pairs.add(pair_key)
+        samples.append({"prompt": prompt, "completion": second["completion"]})
+    return samples
+
+
 def main() -> None:
     """生成训练/验证/测试三份数据到 train/data/。"""
     random.seed(42)
@@ -96,10 +128,13 @@ def main() -> None:
         {"prompt": "蒸馏水和纯水有什么区别？", "completion": "蒸馏水是冷凝制得，纯水杂质极低。"},
     ]
     train_data = augment(BASE_DATA, target=600)
+    # 两轮对话样本：让模型学会在多轮上下文里只回答当前问题
+    train_data += build_multi_turn_samples(BASE_DATA, count=200)
+    random.shuffle(train_data)
     save_jsonl(train_data, "train/data/train.jsonl")
     save_jsonl(val_data, "train/data/val.jsonl")
     save_jsonl(test_data, "train/data/test.jsonl")
-    print(f"数据准备完成：训练集 {len(train_data)} 条，验证集 {len(val_data)} 条，测试集 {len(test_data)} 条")
+    print(f"数据准备完成：训练集 {len(train_data)} 条（含 {200} 条两轮样本），验证集 {len(val_data)} 条，测试集 {len(test_data)} 条")
 
 
 if __name__ == "__main__":
