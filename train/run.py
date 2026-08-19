@@ -8,7 +8,7 @@ import sys
 
 
 def run(cmd: str, desc: str) -> None:
-    """执行 shell 命令，失败时终止整个流程。
+    """执行 shell 命令，失败时终止整个流程；Ctrl+C 干净退出。
 
     Args:
         cmd: 要执行的命令。
@@ -18,7 +18,16 @@ def run(cmd: str, desc: str) -> None:
     print(f"步骤: {desc}")
     print(f"命令: {cmd}")
     print(f"{'=' * 50}")
-    result = subprocess.run(cmd, shell=True)
+    try:
+        result = subprocess.run(cmd, shell=True)
+    except KeyboardInterrupt:
+        # Ctrl+C 同时发给父进程与子进程：静默退出，不打印 traceback
+        print(f"\n✓ {desc} 已停止")
+        sys.exit(0)
+    if result.returncode < 0:
+        # 子进程被信号终止（Ctrl+C 的 SIGINT），视为正常停止
+        print(f"\n✓ {desc} 已停止")
+        sys.exit(0)
     if result.returncode != 0:
         print(f"错误: {desc} 失败 (退出码 {result.returncode})")
         sys.exit(result.returncode)

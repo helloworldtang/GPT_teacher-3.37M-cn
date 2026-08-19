@@ -447,10 +447,15 @@ if __name__ == "__main__":
             print("退出。请手动释放端口后重试。")
             raise SystemExit(0)
 
+    from datetime import datetime
+
     print("\n" + "=" * 50)
     print("  GPT Teacher Web Demo 启动成功！")
+    print(f"  进程启动时间: {datetime.now():%Y-%m-%d %H:%M:%S}")
     print("  打开浏览器访问: http://127.0.0.1:7860")
     print("  按 Ctrl+C 停止服务")
+    print('  （出现 "To create a public link..." 提示说明服务已在运行，')
+    print("    那是 gradio 的例行提示，无需任何操作）")
     print("=" * 50 + "\n")
     demo.queue().launch(
         server_name=os.environ.get("SERVER_NAME", "127.0.0.1"),
