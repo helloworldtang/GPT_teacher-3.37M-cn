@@ -55,6 +55,10 @@ Repository = "https://github.com/helloworldtang/GPT_teacher-3.37M-cn"
 where = ["."]
 include = ["core*", "train*", "distill*"]
 
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["core/tests"]
+
 [tool.ruff]
 line-length = 120
 target-version = "py310"

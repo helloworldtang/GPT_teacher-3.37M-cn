@@ -95,6 +95,7 @@ def generate(
     stop_strings: list[str] | None = ...,
     min_tokens: int = ...,
     device: torch.device | str | None = ...,
+    wrap_prompt: bool = ...,
     return_confidence: Literal[False] = ...,
 ) -> str: ...
 
@@ -113,6 +114,7 @@ def generate(
     stop_strings: list[str] | None = ...,
     min_tokens: int = ...,
     device: torch.device | str | None = ...,
+    wrap_prompt: bool = ...,
     return_confidence: Literal[True],
 ) -> GenerateResult: ...
 
@@ -130,6 +132,7 @@ def generate(
     stop_strings: list[str] | None = None,
     min_tokens: int = 5,
     device: torch.device | str | None = None,
+    wrap_prompt: bool = True,
     return_confidence: bool = False,
 ) -> str | GenerateResult:
     """自回归生成回答，首步后仅输入增量 token + KV Cache。
@@ -146,6 +149,8 @@ def generate(
         stop_strings: 生成文本以其中任一字符串结尾时提前停止。
         min_tokens: 最小生成长度，之前屏蔽 EOS。
         device: 推理设备（torch.device 或 "cpu"/"cuda" 字符串）。
+        wrap_prompt: True（默认）时把 prompt 视为裸问题，包装为 "用户:{prompt}\n助手:"；
+            传入已拼接好的完整对话文本（多轮）时必须设为 False，避免双重包装。
         return_confidence: 是否返回逐 token 置信度。
 
     Returns:
@@ -156,8 +161,10 @@ def generate(
     assert tok.bos_id is not None and tok.eos_id is not None, "分词器缺少 BOS/EOS 特殊 token"
     # normalize prompt: collapse or remove spaces commonly inserted in Chinese
     norm = prompt.replace(" ", "").replace("　", "")
+    # wrap_prompt=False：prompt 已是完整对话文本（多轮拼接），不再包 "用户:\n助手:"
+    text = "用户:" + norm + "\n助手:" if wrap_prompt else norm
     # 手动添加 BOS，不添加 EOS
-    prefix = [tok.bos_id, *tok.encode("用户:" + norm + "\n助手:", add_special_tokens=False)]
+    prefix = [tok.bos_id, *tok.encode(text, add_special_tokens=False)]
     x = torch.tensor(prefix, dtype=torch.long, device=device).unsqueeze(0)
 
     recent: list[int] = []

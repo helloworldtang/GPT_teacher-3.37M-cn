@@ -108,9 +108,15 @@ def ensure_model() -> bool:
 
 
 def build_multi_turn_prompt(history: list[Any], new_message: str) -> str:
-    """将对话历史拼成模型能理解的格式：用户:Q1\\n助手:A1\\n用户:Q2\\n助手:"""
+    """将对话历史拼成模型能理解的格式：用户:Q1\\n助手:A1\\n用户:Q2\\n助手:
+
+    跳过助手消息为 None/空的占位轮次（快捷问题按钮会预填 (问题, None) 等待回答的轮次，
+    若拼入会生成训练数据中不存在的 "助手:None" 模式，导致模型答非所问）。
+    """
     parts = []
     for user_msg, assistant_msg in history:
+        if assistant_msg is None or assistant_msg == "":
+            continue
         parts.append(f"用户:{user_msg}\n助手:{assistant_msg}")
     parts.append(f"用户:{new_message}\n助手:")
     return "\n".join(parts)
@@ -150,6 +156,7 @@ def do_generate(
         repetition_penalty=repeat_penalty,
         stop_strings=["用户:", "\n用户", "。", "；"],
         device=device,
+        wrap_prompt=False,  # prompt 已由 build_multi_turn_prompt 拼好，避免双重 "用户:" 包装
         return_confidence=True,
     )
     elapsed = time.time() - start
@@ -184,7 +191,11 @@ def chat(
     text, elapsed, conf = do_generate(prompt, temperature, top_k, top_p, max_tokens, repeat_penalty)
 
     history = history or []
-    history.append([message, text])
+    # 快捷问题按钮预填了 (message, None) 占位轮：更新它而不是追加，避免问题显示两次
+    if history and history[-1][1] is None:
+        history[-1] = [message, text]
+    else:
+        history.append([message, text])
     return history
 
 
