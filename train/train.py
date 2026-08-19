@@ -174,6 +174,7 @@ def train(
     use_flash: bool = True,
     config_path: str | None = None,
     max_steps_override: int | None = None,
+    quantize: bool = False,
 ) -> None:
     """完整训练流程：早停、checkpoint、loss 曲线、量化导出与自动验收。
 
@@ -182,6 +183,8 @@ def train(
         use_flash: 是否启用 Flash Attention。
         config_path: 配置文件路径，默认 train/config.yml。
         max_steps_override: 覆盖配置中的最大训练步数。
+        quantize: 是否额外导出 int8 动态量化模型（需 fbgemm/qnnpack 引擎，
+            macOS 不支持；产物 quantized.pt 目前无推理链路消费，仅教学演示用）。
     """
     if config_path is None:
         config_path = "train/config.yml"
@@ -375,17 +378,19 @@ def train(
     with open(os.path.join(save_dir, "loss_history.json"), "w") as f:
         json.dump(loss_data, f)
 
-    # 导出量化模型（需要先移到 CPU）
-    try:
-        model.cpu()
-        quantized = torch.quantization.quantize_dynamic(model, {nn.Linear}, dtype=torch.qint8)  # type: ignore[attr-defined]
-        torch.save(
-            {"model": quantized.state_dict(), "cfg": cfg},
-            os.path.join(save_dir, "quantized.pt"),
-        )
-        print("  量化模型已保存: train/checkpoints/quantized.pt")
-    except Exception as e:
-        print(f"  量化导出跳过: {e}")
+    # 导出量化模型：默认关闭（产物无消费链路，且 macOS 无量化引擎），
+    # 需要体验动态量化时用 --quantize 显式开启（Linux x86/ARM 支持）
+    if quantize:
+        try:
+            model.cpu()
+            quantized = torch.quantization.quantize_dynamic(model, {nn.Linear}, dtype=torch.qint8)  # type: ignore[attr-defined]
+            torch.save(
+                {"model": quantized.state_dict(), "cfg": cfg},
+                os.path.join(save_dir, "quantized.pt"),
+            )
+            print("  量化模型已保存: train/checkpoints/quantized.pt")
+        except Exception as e:
+            print(f"  量化导出跳过（--quantize 已开启，但当前平台无动态量化引擎: {e}）")
 
     # 自动运行验收测试
     print(f"\n{'=' * 50}")
@@ -428,9 +433,16 @@ def main() -> None:
         help="训练设备: auto(自动检测), cpu, cuda(GPU), mps(Apple M芯片)",
     )
     ap.add_argument("--no-flash", action="store_true", help="禁用 Flash Attention")
+    ap.add_argument("--quantize", action="store_true", help="额外导出 int8 动态量化模型（macOS 不支持）")
     ap.add_argument("--max_steps", type=int, default=None, help="覆盖配置文件中的训练步数")
     args = ap.parse_args()
-    train(args.device, use_flash=not args.no_flash, config_path=args.config, max_steps_override=args.max_steps)
+    train(
+        args.device,
+        use_flash=not args.no_flash,
+        config_path=args.config,
+        max_steps_override=args.max_steps,
+        quantize=args.quantize,
+    )
 
 
 if __name__ == "__main__":

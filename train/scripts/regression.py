@@ -19,6 +19,8 @@ import hashlib
 import json
 from typing import Any
 
+import torch
+
 from core.evaluate import load_model
 from core.infer import generate
 from train.web_demo import EXAMPLE_QUESTIONS, build_multi_turn_prompt
@@ -58,8 +60,15 @@ def _md5(text: str) -> str:
 
 
 def run_all() -> dict[str, str]:
-    """跑全部金样本，返回 {用例名: 输出 md5}。"""
+    """跑全部金样本，返回 {用例名: 输出 md5}。
+
+    设备固定 CPU：回归套件只应捕捉"代码/模型/数据"引起的行为变化，
+    设备差异（MPS 偶发浮点非确定）是噪声——曾有一条 OOD 用例
+    在不同运行间翻转过输出，固定设备后消除。
+    """
     model, tok, device = load_model("train/checkpoints/best.pt")
+    model.to(torch.device("cpu"))
+    device = torch.device("cpu")
 
     def gen(prompt: str) -> str:
         return generate(
