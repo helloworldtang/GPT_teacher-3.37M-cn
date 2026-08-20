@@ -2,56 +2,12 @@
 
 import argparse
 import json
-import os
-from typing import Any
 
 import torch
 
-from core.infer import generate, warn_tokenizer_mismatch
+from core.infer import generate, load_model_and_tokenizer
 from core.model import GPT
-from core.tokenizer import TokenizerLike, load_tokenizer
-
-
-def load_model(ckpt_path: str = "train/checkpoints/best.pt") -> tuple[GPT, TokenizerLike, torch.device]:
-    """从 checkpoint 恢复模型与分词器，自动选择可用设备。
-
-    Args:
-        ckpt_path: checkpoint 路径。
-
-    Returns:
-        (模型, 分词器, 设备)，模型已 eval 并移至设备。
-
-    Raises:
-        SystemExit: checkpoint 不存在。
-    """
-    if not os.path.exists(ckpt_path):
-        print(f"错误：未找到模型文件 {ckpt_path}")
-        print("请先运行训练：uv run python -m train.train")
-        raise SystemExit(1)
-    checkpoint: dict[str, Any] = torch.load(ckpt_path, map_location="cpu", weights_only=False)
-    warn_tokenizer_mismatch(checkpoint)
-    cfg: dict[str, Any] = checkpoint["cfg"]
-    tok = load_tokenizer(
-        cfg.get("tokenizer", {}).get("type", "byte"),
-        cfg.get("tokenizer", {}).get("path"),
-    )
-    model = GPT(
-        vocab_size=tok.vocab_size,
-        n_layer=cfg["model"]["n_layer"],
-        n_head=cfg["model"]["n_head"],
-        n_embd=cfg["model"]["n_embd"],
-        seq_len=cfg["model"]["seq_len"],
-        dropout=0.0,
-        n_kv_head=cfg["model"].get("n_kv_head"),
-    )
-    model.load_state_dict(checkpoint["model"])
-    model.eval()
-
-    device = torch.device(
-        "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
-    )
-    model.to(device)
-    return model, tok, device
+from core.tokenizer import TokenizerLike
 
 
 def run_test(
@@ -131,7 +87,7 @@ def main() -> None:
     ap.add_argument("--test", default="train/data/test.jsonl", help="测试集路径")
     args = ap.parse_args()
 
-    model, tok, device = load_model(args.ckpt)
+    model, tok, _, device = load_model_and_tokenizer(args.ckpt)
     run_test(model, tok, device, args.test)
 
 

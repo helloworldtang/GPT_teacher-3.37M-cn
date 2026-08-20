@@ -19,10 +19,7 @@ import hashlib
 import json
 from typing import Any
 
-import torch
-
-from core.evaluate import load_model
-from core.infer import generate
+from core.infer import generate, load_model_and_tokenizer
 from train.web_demo import EXAMPLE_QUESTIONS, build_multi_turn_prompt
 
 BASELINE_PATH = "train/data/regression_baseline.json"
@@ -66,9 +63,7 @@ def run_all() -> dict[str, str]:
     设备差异（MPS 偶发浮点非确定）是噪声——曾有一条 OOD 用例
     在不同运行间翻转过输出，固定设备后消除。
     """
-    model, tok, device = load_model("train/checkpoints/best.pt")
-    model.to(torch.device("cpu"))
-    device = torch.device("cpu")
+    model, tok, _, device = load_model_and_tokenizer("train/checkpoints/best.pt", device="cpu")
 
     def gen(prompt: str) -> str:
         return generate(

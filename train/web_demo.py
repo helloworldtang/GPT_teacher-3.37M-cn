@@ -17,9 +17,9 @@ import gradio as gr
 import gradio_client.utils as _gcu
 import torch
 
-from core.infer import generate, warn_tokenizer_mismatch
+from core.infer import generate, load_model_and_tokenizer
 from core.model import GPT
-from core.tokenizer import TokenizerLike, load_tokenizer
+from core.tokenizer import TokenizerLike
 
 _orig_get_type = _gcu.get_type
 
@@ -43,51 +43,12 @@ FALLBACK_ANSWERS = [
 ]
 
 
-def load_model(ckpt_path: str) -> tuple[GPT, TokenizerLike, dict[str, Any]]:
-    """从 checkpoint 恢复模型与分词器。
-
-    Args:
-        ckpt_path: checkpoint 路径。
-
-    Returns:
-        (模型, 分词器, 配置字典)。
-    """
-    checkpoint: dict[str, Any] = torch.load(ckpt_path, map_location="cpu", weights_only=False)
-    warn_tokenizer_mismatch(checkpoint)
-    cfg = checkpoint["cfg"]
-
-    tok = load_tokenizer(
-        cfg.get("tokenizer", {}).get("type", "byte"),
-        cfg.get("tokenizer", {}).get("path"),
-    )
-
-    model = GPT(
-        vocab_size=tok.vocab_size,
-        n_layer=cfg["model"]["n_layer"],
-        n_head=cfg["model"]["n_head"],
-        n_embd=cfg["model"]["n_embd"],
-        seq_len=cfg["model"]["seq_len"],
-        dropout=0.0,
-        n_kv_head=cfg["model"].get("n_kv_head"),
-    )
-    model.load_state_dict(checkpoint["model"])
-    model.eval()
-    return model, tok, cfg
-
-
 DEFAULT_CKPT = "train/checkpoints/best.pt"
 
 model: GPT | None = None
 tokenizer: TokenizerLike | None = None
 device: torch.device | None = None
 model_info = ""
-
-
-def get_device() -> torch.device:
-    """返回首个可用设备（cuda > mps > cpu）。"""
-    return torch.device(
-        "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
-    )
 
 
 def ensure_model() -> bool:
@@ -100,9 +61,8 @@ def ensure_model() -> bool:
     if model is None:
         if not os.path.exists(DEFAULT_CKPT):
             return False
-        model, tokenizer, cfg = load_model(DEFAULT_CKPT)
-        device = get_device()
-        model.to(device)
+        model, tokenizer, _, dev = load_model_and_tokenizer(DEFAULT_CKPT)
+        device = dev
         n_params = sum(p.numel() for p in model.parameters())
         model_info = f"模型: {n_params / 1e6:.2f}M 参数 | 设备: {device}"
     return True

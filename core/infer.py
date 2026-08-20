@@ -86,6 +86,65 @@ def warn_tokenizer_mismatch(checkpoint: dict[str, Any]) -> None:
         print(f"   {tok_path} 的词表已漂移，推理输出将静默损坏；请还原训练时分词器或重新训练")
 
 
+def auto_device() -> torch.device:
+    """返回首个可用的推理设备（cuda > mps > cpu）。"""
+    if torch.cuda.is_available():
+        return torch.device("cuda")
+    if torch.backends.mps.is_available():
+        return torch.device("mps")
+    return torch.device("cpu")
+
+
+def load_model_and_tokenizer(
+    ckpt_path: str = "train/checkpoints/best.pt",
+    *,
+    device: torch.device | str | None = None,
+    use_flash: bool = True,
+) -> tuple[GPT, TokenizerLike, dict[str, Any], torch.device]:
+    """统一的推理侧加载链路：checkpoint → 指纹校验 → 重建模型 → 加载权重。
+
+    这段逻辑此前在 evaluate / web_demo / infer / train 四处各抄一份，
+    改模型配置容易漏改；统一入口保证指纹校验与设备选择只维护一份。
+
+    Args:
+        ckpt_path: checkpoint 路径（.pt 或 .safetensors）。
+        device: 目标设备，None 时自动选择（cuda > mps > cpu）；
+            量化 checkpoint 忽略此参数并固定 CPU。
+        use_flash: 是否启用 Flash Attention（SDPA 与手动实现在浮点求和
+            顺序上有差异，会改变 greedy 输出，切换前先跑金样本回归）。
+
+    Returns:
+        (模型, 分词器, 配置, 设备)，模型已加载权重、eval 并移至设备。
+
+    Raises:
+        SystemExit: checkpoint 文件不存在（由 load_checkpoint 抛出）。
+    """
+    obj = load_checkpoint(ckpt_path)
+    warn_tokenizer_mismatch(obj)
+    cfg = obj["cfg"]
+    tok = load_tokenizer(cfg.get("tokenizer", {}).get("type", "byte"), cfg.get("tokenizer", {}).get("path"))
+    m = GPT(
+        vocab_size=tok.vocab_size,
+        n_layer=cfg["model"]["n_layer"],
+        n_head=cfg["model"]["n_head"],
+        n_embd=cfg["model"]["n_embd"],
+        seq_len=cfg["model"]["seq_len"],
+        dropout=0.0,
+        use_flash=use_flash,
+        n_kv_head=cfg["model"].get("n_kv_head"),
+    )
+    sd = obj["model"]
+    if any("_packed_params" in k for k in sd):  # 量化产物仅支持 CPU
+        m = torch.quantization.quantize_dynamic(m, {torch.nn.Linear}, dtype=torch.qint8)  # type: ignore[attr-defined]
+        dev = torch.device("cpu")
+    else:
+        dev = auto_device() if device is None else torch.device(device)
+    m.load_state_dict(sd)
+    m.to(dev)
+    m.eval()
+    return m, tok, cfg, dev
+
+
 def _is_punct_token(tok: TokenizerLike, tid: int) -> bool:
     """判断 token 解码后是否以标点开头。"""
     try:
@@ -175,6 +234,11 @@ def generate(
             传入已拼接好的完整对话文本（多轮）时必须设为 False，避免双重包装。
         return_confidence: 是否返回逐 token 置信度。
 
+    Note:
+        总长度（prompt + 生成）受训练时的 seq_len 硬约束：超长 prompt 会被截断
+        保留最近上下文（打印警告），生成达到上限时提前停止——超出训练长度后
+        RoPE 在未训练位置外推，输出质量会静默劣化。
+
     Returns:
         return_confidence 为 False 时返回生成文本；
         为 True 时返回 GenerateResult（文本 + 平均置信度 + 逐 token 置信度）。
@@ -188,6 +252,14 @@ def generate(
     # 手动添加 BOS，不添加 EOS
     prefix = [tok.bos_id, *tok.encode(text, add_special_tokens=False)]
     x = torch.tensor(prefix, dtype=torch.long, device=device).unsqueeze(0)
+
+    # 序列长度保护：prompt + 生成总长不得超过训练时的 seq_len（多轮对话拼接历史时
+    # 真实会超出）。超长 prompt 截断保留最近的上下文，并用截断后的长度切分生成部分。
+    max_len = model.seq_len
+    if x.shape[1] > max_len - 1:  # 至少留 1 个生成位
+        print(f"⚠️  警告: prompt 长度 {x.shape[1]} 超过训练序列长度 {max_len}，已截断保留最近上下文")
+        x = x[:, -(max_len - 1) :]
+    prefix_len = x.shape[1]
 
     recent: list[int] = []
     kv_caches: list[KvCache | None] | None = None
@@ -252,12 +324,14 @@ def generate(
             recent.append(int(next_id.item()))
             if next_id.item() == tok.eos_id:
                 break
+            if x.shape[1] >= max_len:
+                break  # 达到训练长度上限，继续生成会超出 RoPE 训练区间
             if stop_strings:
-                out_ids = x[0].tolist()[len(prefix) :]
+                out_ids = x[0].tolist()[prefix_len:]
                 out_text = tok.decode(out_ids)
                 if any(out_text.endswith(ss) for ss in stop_strings):
                     break
-    out_ids = x[0].tolist()[len(prefix) :]
+    out_ids = x[0].tolist()[prefix_len:]
     text = _trim_leading_punct(tok.decode(out_ids))
     if return_confidence:
         avg_conf = sum(token_probs) / len(token_probs) if token_probs else 0.0
@@ -280,29 +354,11 @@ def main() -> None:
     ap.add_argument("--show_label", action="store_true")
     ap.add_argument("--device", type=str, default="auto", choices=["auto", "cpu"])
     args = ap.parse_args()
-    obj = load_checkpoint(args.ckpt)
-    warn_tokenizer_mismatch(obj)
-    cfg = obj["cfg"]
-    tok = load_tokenizer(cfg.get("tokenizer", {}).get("type", "byte"), cfg.get("tokenizer", {}).get("path"))
-    m = GPT(
-        vocab_size=tok.vocab_size,
-        n_layer=cfg["model"]["n_layer"],
-        n_head=cfg["model"]["n_head"],
-        n_embd=cfg["model"]["n_embd"],
-        seq_len=cfg["model"]["seq_len"],
-        dropout=cfg["model"]["dropout"],
+    m, tok, _, device = load_model_and_tokenizer(
+        args.ckpt,
+        device=None if args.device == "auto" else args.device,
         use_flash=False,
-        n_kv_head=cfg["model"].get("n_kv_head"),
     )
-    sd = obj["model"]
-    packed = any("_packed_params" in k for k in sd)
-    if packed:
-        device = torch.device("cpu")
-        m = torch.quantization.quantize_dynamic(m, {torch.nn.Linear}, dtype=torch.qint8)  # type: ignore[attr-defined]
-    else:
-        device = torch.device("cuda") if (args.device == "auto" and torch.cuda.is_available()) else torch.device("cpu")
-    m.load_state_dict(sd)
-    m.to(device)
 
     # 预热推理逻辑
     print("--- 模型推理结果 ---")

@@ -1,8 +1,12 @@
 """精简版教学数据：12 个核心问题，答案简短有力，3M 模型能真正记住。"""
 
+import argparse
 import json
+import os
 import random
 from typing import Any
+
+import yaml
 
 # 精选核心问答（答案控制在 40 字以内，确保在 128 token 内有足够余量）
 BASE_DATA: list[dict[str, str]] = [
@@ -83,7 +87,12 @@ def save_jsonl(data: list[dict[str, Any]], path: str) -> None:
             f.write(json.dumps(item, ensure_ascii=False) + "\n")
 
 
-def build_multi_turn_samples(base_data: list[dict[str, str]], count: int = 200) -> list[dict[str, str]]:
+def build_multi_turn_samples(
+    base_data: list[dict[str, str]],
+    count: int = 200,
+    seq_len: int = 128,
+    tokens_per_char: float = 1.35,
+) -> list[dict[str, str]]:
     """生成两轮对话样本：第一轮作为上下文，只学第二轮答案。
 
     样本表达为 prompt="Q1\\n助手:A1\\n用户:Q2"（InstructDataset 会补首尾的
@@ -93,10 +102,17 @@ def build_multi_turn_samples(base_data: list[dict[str, str]], count: int = 200) 
     Args:
         base_data: 基础问答对（要求两轮问题不同）。
         count: 生成的两轮样本数。
+        seq_len: 训练最大序列长度（config.yml 的 model.seq_len），换
+            tokenizer 调整 seq_len 时长度上限自动联动。
+        tokens_per_char: 保守的 token/字符比上界（BPE 最坏约 1.35；
+            char-level 分词可降到 1.0 放宽上限）。
 
     Returns:
         两轮对话样本列表。
     """
+    # 两轮全文需在 seq_len 内（按 tokens_per_char 折算字符上限），
+    # 超长样本会被截断成"只有前缀没有答案"的废样本
+    max_chars = round(seq_len / tokens_per_char)
     samples: list[dict[str, str]] = []
     seen_pairs: set[tuple[str, str]] = set()
     while len(samples) < count:
@@ -106,17 +122,46 @@ def build_multi_turn_samples(base_data: list[dict[str, str]], count: int = 200) 
             continue
         prompt = f"{first['prompt']}\n助手:{first['completion']}\n用户:{second['prompt']}"
         full_text = f"用户:{prompt}\n助手:{second['completion']}"
-        # 两轮全文需在 seq_len=128 内（BPE 最坏 ~1.35 token/字符，保守限 95 字符），
-        # 超长样本会被截断成"只有前缀没有答案"的废样本
-        if len(full_text) > 95:
+        if len(full_text) > max_chars:
             continue
         seen_pairs.add(pair_key)
         samples.append({"prompt": prompt, "completion": second["completion"]})
     return samples
 
 
+def _seq_len_from_config(config_path: str) -> int:
+    """从训练配置读取 model.seq_len，让数据长度上限与训练配置联动。
+
+    Args:
+        config_path: config.yml 路径。
+
+    Returns:
+        最大序列长度。
+
+    Raises:
+        KeyError: 配置缺少 model.seq_len。
+    """
+    with open(config_path) as f:
+        cfg: dict[str, Any] = yaml.safe_load(f)
+    return int(cfg["model"]["seq_len"])
+
+
 def main() -> None:
-    """生成训练/验证/测试三份数据到 train/data/。"""
+    """生成训练/验证/测试三份数据（默认参数下与既有数据完全一致）。"""
+    ap = argparse.ArgumentParser(description="生成训练/验证/测试数据")
+    ap.add_argument("--seq-len", type=int, default=None, help="最大序列长度；默认读 train/config.yml 的 model.seq_len")
+    ap.add_argument(
+        "--tokens-per-char",
+        type=float,
+        default=1.35,
+        help="保守 token/字符比上界（BPE 最坏约 1.35；char-level 分词可用 1.0）",
+    )
+    ap.add_argument("--target", type=int, default=600, help="单轮增强后目标条数")
+    ap.add_argument("--multi-count", type=int, default=200, help="两轮对话样本条数")
+    ap.add_argument("--out-dir", default="train/data", help="输出目录")
+    args = ap.parse_args()
+
+    seq_len = args.seq_len if args.seq_len is not None else _seq_len_from_config("train/config.yml")
     random.seed(42)
     val_data = [BASE_DATA[0], BASE_DATA[5], BASE_DATA[9], BASE_DATA[10], BASE_DATA[11]]
     test_data = [
@@ -127,15 +172,18 @@ def main() -> None:
         {"prompt": "太阳系有哪些行星？", "completion": "水星、金星、地球、火星等八大行星。"},
         {"prompt": "蒸馏水和纯水有什么区别？", "completion": "蒸馏水是冷凝制得，纯水杂质极低。"},
     ]
-    train_data = augment(BASE_DATA, target=600)
+    train_data = augment(BASE_DATA, target=args.target)
     # 两轮对话样本：让模型学会在多轮上下文里只回答当前问题
-    train_data += build_multi_turn_samples(BASE_DATA, count=200)
+    train_data += build_multi_turn_samples(
+        BASE_DATA, count=args.multi_count, seq_len=seq_len, tokens_per_char=args.tokens_per_char
+    )
     random.shuffle(train_data)
-    save_jsonl(train_data, "train/data/train.jsonl")
-    save_jsonl(val_data, "train/data/val.jsonl")
-    save_jsonl(test_data, "train/data/test.jsonl")
+    save_jsonl(train_data, os.path.join(args.out_dir, "train.jsonl"))
+    save_jsonl(val_data, os.path.join(args.out_dir, "val.jsonl"))
+    save_jsonl(test_data, os.path.join(args.out_dir, "test.jsonl"))
     print(
-        f"数据准备完成：训练集 {len(train_data)} 条（含 {200} 条两轮样本），验证集 {len(val_data)} 条，测试集 {len(test_data)} 条"
+        f"数据准备完成：训练集 {len(train_data)} 条（含 {args.multi_count} 条两轮样本），"
+        f"验证集 {len(val_data)} 条，测试集 {len(test_data)} 条（seq_len={seq_len}）"
     )
 
 

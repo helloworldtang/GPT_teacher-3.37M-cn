@@ -345,7 +345,6 @@ def train(
                                 print(f"\n=== 早停触发 (step {step}) ===")
                                 print(f"最佳验证损失: {best_val_loss:.4f} (step {best_step})")
                                 print(f"总训练时间: {elapsed:.1f}s")
-                            save_ckpt("last.pt")
                             early_stop_triggered = True
 
                     save_ckpt("last.pt")
@@ -398,27 +397,25 @@ def train(
     print(f"{'=' * 50}")
     try:
         from core.evaluate import run_test
+        from core.infer import load_model_and_tokenizer
 
         model.eval()
         # 加载 best 模型进行验收
         best_path = os.path.join(save_dir, "best.pt")
-        ckpt: dict[str, Any] = torch.load(best_path, map_location="cpu", weights_only=False)
-        eval_model = GPT(
-            vocab_size=tok.vocab_size,
-            n_layer=cfg["model"]["n_layer"],
-            n_head=cfg["model"]["n_head"],
-            n_embd=cfg["model"]["n_embd"],
-            seq_len=seq_len,
-            dropout=0.0,
-            n_kv_head=cfg["model"].get("n_kv_head"),
-        )
-        eval_model.load_state_dict(ckpt["model"])
-        eval_model.to(device)
-        eval_model.eval()
-        run_test(eval_model, tok, device)
+        if not os.path.exists(best_path):
+            raise RuntimeError(f"未生成 best checkpoint（{best_path}），无法验收")
+        eval_model, _, _, _ = load_model_and_tokenizer(best_path, device=device)
+        passed, total = run_test(eval_model, tok, device)
+        # 验收未达线（与 core.evaluate 的 80% 阈值一致）时以非零退出码结束：
+        # 一键流程的成败必须可被脚本与 CI 感知，不能只在控制台打印。
+        if total == 0 or passed / total < 0.8:
+            raise SystemExit(f"验收未达线: {passed}/{total} 通过（需 ≥80%），退出码置 1")
+    except SystemExit:
+        raise
     except Exception as e:
         print(f"验收测试执行出错: {e}")
         print("可手动运行: uv run python -m core.evaluate")
+        raise SystemExit(1) from e
 
 
 def main() -> None:
