@@ -56,7 +56,7 @@ jobs:
         run: uv run python -m core.build_tokenizer
 
       - name: Quick training smoke test (50 steps)
-        run: uv run python -m train.train --max_steps 50 --device cpu
+        run: uv run python -m train.train --max_steps 50 --device cpu --no-acceptance
         timeout-minutes: 10
 
       - name: Run evaluation

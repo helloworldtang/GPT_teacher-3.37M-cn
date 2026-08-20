@@ -175,6 +175,7 @@ def train(
     config_path: str | None = None,
     max_steps_override: int | None = None,
     quantize: bool = False,
+    acceptance: bool = True,
 ) -> None:
     """完整训练流程：早停、checkpoint、loss 曲线、量化导出与自动验收。
 
@@ -185,6 +186,9 @@ def train(
         max_steps_override: 覆盖配置中的最大训练步数。
         quantize: 是否额外导出 int8 动态量化模型（需 fbgemm/qnnpack 引擎，
             macOS 不支持；产物 quantized.pt 目前无推理链路消费，仅教学演示用）。
+        acceptance: 是否在训练末尾跑自动验收。CI 的 50 步 smoke 是欠拟合
+            模型，验收必然 0/6（退出码 1 会让 CI 红），这类只验证流程
+            不验证质量的场景应传 False 跳过。
     """
     if config_path is None:
         config_path = "train/config.yml"
@@ -392,6 +396,9 @@ def train(
             print(f"  量化导出跳过（--quantize 已开启，但当前平台无动态量化引擎: {e}）")
 
     # 自动运行验收测试
+    if not acceptance:
+        print("\n已跳过自动验收（--no-acceptance）")
+        return
     print(f"\n{'=' * 50}")
     print("开始验收测试...")
     print(f"{'=' * 50}")
@@ -432,6 +439,9 @@ def main() -> None:
     ap.add_argument("--no-flash", action="store_true", help="禁用 Flash Attention")
     ap.add_argument("--quantize", action="store_true", help="额外导出 int8 动态量化模型（macOS 不支持）")
     ap.add_argument("--max_steps", type=int, default=None, help="覆盖配置文件中的训练步数")
+    ap.add_argument(
+        "--no-acceptance", action="store_true", help="跳过训练末尾的自动验收（CI smoke 等只验证流程的场景）"
+    )
     args = ap.parse_args()
     train(
         args.device,
@@ -439,6 +449,7 @@ def main() -> None:
         config_path=args.config,
         max_steps_override=args.max_steps,
         quantize=args.quantize,
+        acceptance=not args.no_acceptance,
     )
 
 
