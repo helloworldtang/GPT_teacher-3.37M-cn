@@ -2,6 +2,23 @@
 
 用大模型当 teacher，探索小模型能否通过蒸馏获得新能力。实验结论：**三个方向全部失败**——但失败本身比成功更有价值。
 
+## 2026-11 更新：三连败之后，路走通了
+
+三连败的续集（当天的完整实验记录见 [docs/distill-roadmap.md](../docs/distill-roadmap.md)）：中等词表解除了不可能三角的 tokenizer 约束，数据级路径在本仓走通（域内 90%、OOD 零塌缩），并落地为端侧产品 [re-pilot](https://github.com/helloworldtang/re-pilot)（2B 模型 22%→91%，完全离线）。业界六条蒸馏路径的点亮全景：
+
+| # | 业界路径 | 本项目状态 | 一句话证据 |
+|---|---|---|---|
+| 1 | 数据级蒸馏（DeepSeek-R1 同款） | ✅✅ 产品级 | 本仓路径 A 域内 90% → re-pilot 22%→91% → 公开仓 v0.1.0 |
+| 2 | 伪标签蒸馏（Distil-Whisper） | ◐ 半点亮 | 程序化用例=合成标签+自动验证 |
+| 3 | CoT 推理链蒸馏 | ✅ 边界点亮 | 4M 上纯负担（容量门槛，student ≥1.5B 才成立） |
+| 4 | Logit 白盒 KD（Minitron） | ✅ 负结果+边界 | 跨词表后训练两轮失败，与 DeepSeek 绕开互印证 |
+| 5 | On-policy 蒸馏（GKD） | ✅ 机制点亮 | 自举自解率 93%，免费验证器替代成本大头 |
+| 6 | 教科书合成数据（Phi） | ✅ 思想同构 | 正确性由构造保证，自然性由 teacher 保证 |
+
+完整矩阵（含证据链接与诚实边界：域内 91% / 训练外 15% 双证伪）的单一事实源在
+[re-pilot/docs/distillation-map.md](https://github.com/helloworldtang/re-pilot/blob/main/docs/distillation-map.md)。
+以下为当时三连败的原始记录——**它的结论没有作废，是这张地图的地基**。
+
 ## 项目结构
 
 ```
