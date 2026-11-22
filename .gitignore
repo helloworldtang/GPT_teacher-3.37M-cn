@@ -49,7 +49,8 @@ dmypy.json
 
 # Project specific
 train/checkpoints/
-distill/checkpoints/
+distill/checkpoints*/
+distill/tokenizer.json
 distill/data/
 logs/
 *.log

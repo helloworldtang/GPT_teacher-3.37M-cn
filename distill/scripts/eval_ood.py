@@ -57,6 +57,7 @@ def main() -> None:
     ap.add_argument("--ckpt", default="distill/checkpoints/best.pt")
     ap.add_argument("--judge", action="store_true", help="加载 teacher 判卷（答对率指标）")
     ap.add_argument("--teacher", default="Qwen/Qwen2.5-1.5B-Instruct")
+    ap.add_argument("--extract", type=str, default=None, help="CoT 模型答案抽取标记（如「答案是：」）")
     ap.add_argument("--out", default="distill/data/ood_results.json")
     args = ap.parse_args()
 
@@ -65,14 +66,14 @@ def main() -> None:
 
     model, tok, _, device = load_model_and_tokenizer(args.ckpt, device="cpu")
 
-    answers: list[str] = []
+    raw_answers: list[str] = []
     for q in ood:
-        answers.append(
+        raw_answers.append(
             generate(
                 model,
                 tok,
                 q,
-                max_new_tokens=64,
+                max_new_tokens=96 if args.extract else 64,
                 temperature=0.0,
                 top_k=50,
                 top_p=0.9,
@@ -81,6 +82,8 @@ def main() -> None:
                 device=device,
             )
         )
+    # CoT 模型：指标与判卷只看标记之后的最终答案，推理链单独留档
+    answers = [r.split(args.extract, 1)[-1].strip() if args.extract else r for r in raw_answers]
 
     unique = len(set(answers))
     top, top_count = Counter(answers).most_common(1)[0]
@@ -97,6 +100,8 @@ def main() -> None:
         mark = "" if verdicts is None else ("✓ " if verdicts[i] else "✗ ")
         print(f"{mark}Q: {q}")
         print(f"  A: {a}")
+        if args.extract:
+            print(f"  原始输出: {raw_answers[i][:80]}")
 
     with open(args.out, "w", encoding="utf-8") as f:
         json.dump(
@@ -104,6 +109,7 @@ def main() -> None:
                 "ckpt": args.ckpt,
                 "questions": ood,
                 "answers": answers,
+                "raw_answers": raw_answers if args.extract else None,
                 "unique": unique,
                 "collapse_share": top_count / len(ood),
                 "verdicts": verdicts,

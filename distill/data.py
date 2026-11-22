@@ -347,13 +347,105 @@ def generate(
     with open("distill/data/ood_questions.json", "w", encoding="utf-8") as f:
         json.dump({"ood": ood_set, "val_topics": val_set}, f, ensure_ascii=False, indent=2)
 
-    print(f"\n生成完成: {len(train_rows)} 训练行 / {len(val_rows)} 验证行(同题留出前缀) / {len(ood_set)} OOD 问题 → distill/data/")
+    print(
+        f"\n生成完成: {len(train_rows)} 训练行 / {len(val_rows)} 验证行(同题留出前缀) / {len(ood_set)} OOD 问题 → distill/data/"
+    )
+
+
+def generate_cot(teacher_name: str) -> None:
+    """CoT 再答：复用已生成语料的同一批主题，teacher 改产「短推理链+答案」。
+
+    与直接答案版（generate 的产物）构成受控对照——主题集合完全相同，
+    唯一变量是 completion 是否携带推理过程（DeepSeek-R1 蒸馏配方的核心
+    成分）。产出 distill/data/{generated_qa,train_generated,val_generated}_cot.jsonl。
+
+    Args:
+        teacher_name: teacher 模型名（HuggingFace id）。
+    """
+    import torch
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+
+    with open("distill/data/generated_qa.jsonl", encoding="utf-8") as f:
+        topics = [json.loads(line)["prompt"] for line in f]
+    print(f"复用主题: {len(topics)}（来自 generated_qa.jsonl，与直接答案版完全同集）")
+
+    tok = AutoTokenizer.from_pretrained(teacher_name)
+    model = AutoModelForCausalLM.from_pretrained(teacher_name, torch_dtype=torch.bfloat16)
+    model.eval()
+    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    model.to(device)
+    for p in model.parameters():
+        p.requires_grad = False
+    print(f"Teacher: {teacher_name} ({device})")
+
+    def chat(question: str, max_new_tokens: int, temperature: float) -> str:
+        messages = [
+            {"role": "system", "content": "你是一个简洁的知识助手。"},
+            {"role": "user", "content": question},
+        ]
+        text = tok.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+        inputs = tok(text, return_tensors="pt").to(model.device)
+        with torch.no_grad():
+            output = model.generate(
+                **inputs,
+                max_new_tokens=max_new_tokens,
+                temperature=temperature,
+                top_p=0.9,
+                do_sample=temperature > 0,
+                pad_token_id=tok.eos_token_id,
+            )
+        gen_ids = output[0][inputs["input_ids"].shape[1] :]
+        decoded: str = tok.decode(gen_ids, skip_special_tokens=True)
+        return decoded.strip()
+
+    qa_pairs: list[dict[str, str]] = []
+    for i, q in enumerate(topics):
+        cot = ""
+        for _ in range(2):
+            cot = chat(
+                f"{q}\n要求：先给出不超过40字的简短推理过程，最后另起一行以「答案是：」开头给出不超过20字的最终答案。",
+                max_new_tokens=120,
+                temperature=0.3,
+            )
+            # 规范化：首行推理 + 末行答案，总长 ≤ 90 字
+            lines = [ln.strip() for ln in cot.splitlines() if ln.strip()]
+            if lines and lines[-1].startswith("答案是："):
+                cot = "\n".join(lines[-2:]) if len(lines) >= 2 else lines[-1]
+            if 8 <= len(cot) <= 90 and "答案是：" in cot:
+                break
+        if not (8 <= len(cot) <= 90 and "答案是：" in cot):
+            print(f"  ✗ 跳过（CoT 格式不合规）: {q} -> {cot[:40]}")
+            continue
+        qa_pairs.append({"prompt": q, "completion": cot})
+        if (i + 1) % 25 == 0:
+            print(f"  CoT 再答进度: {i + 1}/{len(topics)}")
+
+    with open("distill/data/generated_qa_cot.jsonl", "w", encoding="utf-8") as f:
+        for item in qa_pairs:
+            f.write(json.dumps(item, ensure_ascii=False) + "\n")
+
+    train_rows: list[dict[str, str]] = []
+    val_rows: list[dict[str, str]] = []
+    for item in qa_pairs:
+        for pf in PREFIXES[:-1]:
+            train_rows.append({"prompt": pf + item["prompt"], "completion": item["completion"]})
+        val_rows.append({"prompt": PREFIXES[-1] + item["prompt"], "completion": item["completion"]})
+    random.seed(42)
+    random.shuffle(train_rows)
+
+    with open("distill/data/train_generated_cot.jsonl", "w", encoding="utf-8") as f:
+        for item in train_rows:
+            f.write(json.dumps(item, ensure_ascii=False) + "\n")
+    with open("distill/data/val_generated_cot.jsonl", "w", encoding="utf-8") as f:
+        for item in val_rows:
+            f.write(json.dumps(item, ensure_ascii=False) + "\n")
+    print(f"\nCoT 语料完成: {len(train_rows)} 训练行 / {len(val_rows)} 验证行 → distill/data/*_cot.jsonl")
 
 
 def main() -> None:
-    """命令行入口：generate（两段式语料生成）/ augment（teacher 增强）/ expand（主题扩展）。"""
+    """命令行入口：generate（两段式语料生成）/ generate_cot（同主题 CoT 再答）/ augment / expand。"""
     ap = argparse.ArgumentParser()
-    ap.add_argument("--method", choices=["generate", "augment", "expand"], required=True)
+    ap.add_argument("--method", choices=["generate", "generate_cot", "augment", "expand"], required=True)
     ap.add_argument("--teacher", default="Qwen/Qwen2.5-1.5B-Instruct")
     ap.add_argument("--topics", type=int, default=30, help="generate: 主题总数")
     ap.add_argument("--holdout", type=int, default=15, help="generate: OOD 保留主题数")
@@ -363,6 +455,8 @@ def main() -> None:
 
     if args.method == "generate":
         generate(args.teacher, args.topics, args.holdout, args.val_topics, args.repeats)
+    elif args.method == "generate_cot":
+        generate_cot(args.teacher)
     elif args.method == "augment":
         augment(args.teacher)
     else:

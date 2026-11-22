@@ -1,0 +1,26 @@
+# CoT 对照实验配置：与 distill/config.yml 仅数据路径与 save_dir 不同，
+# 主题集合与直接答案版完全同源（受控对照，变量只有"答案是否带推理链"）。
+data:
+  train_path: distill/data/train_generated_cot.jsonl
+  val_path: distill/data/val_generated_cot.jsonl
+model:
+  dropout: 0.1
+  n_embd: 256
+  n_head: 4
+  n_kv_head: 2
+  n_layer: 4
+  seq_len: 128
+tokenizer:
+  path: distill/tokenizer.json
+  type: hf_tokenizers
+training:
+  batch_size: 16
+  early_stopping_patience: 60
+  eval_interval: 50
+  lr: 0.001
+  max_steps: 5000
+  micro_batch: 4
+  save_dir: distill/checkpoints_cot
+  seed: 42
+  warmup_steps: 100
+  weight_decay: 0.1

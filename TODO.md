@@ -4,15 +4,14 @@
 
 ## 🧪 项目迭代
 
-- [ ] distill 新方向：中等词表 BPE tokenizer 实验（5K-10K，降低 embedding 占比）
-  - 依据：第 9 篇蒸馏三连败的"不可能三角"结论；从 student 架构和 tokenizer 下手
-  - 安全网已就位（2026-08-19 三件套）：
-    - `train/scripts/regression.py` 金样本回归（27 条，量化"换 tokenizer 改变多少行为"；
-      重建基线用 `--update`，当前基线锚定 best.pt md5=cd74f0427092，2026-11-22 全流程重训复验 0/27 零行为变化）
-    - checkpoint 版本指纹（git hash + 数据 md5 + tokenizer md5 随权重落盘）
-    - 加载时 tokenizer 一致性校验（词表漂移显式警告）
-  - 前置加固已完成（2026-08-20）：prepare_data 已参数化（`--seq-len`/`--tokens-per-char` 联动 config.yml，换 tokenizer 时长度上限不再静默失效）
-  - 实验产出可写系列第 11 篇
+- [x] distill 蒸馏路径实验（2026-11-22 收官，全记录见 docs/distill-roadmap.md）
+  - 中等词表(4096 BPE)实证 0.50 token/字反超 Qwen，不可能三角的 tokenizer 约束解除
+  - 路径 A 数据级：域内 90% + OOD 零塌缩（第 9 篇基线全塌缩）——业界主流（DeepSeek-R1 同配方）
+  - 路径 B 词表桥接 KD：负结果 ×2 轮，适用边界定稿（同词表预训练压缩才用 logit KD）
+  - CoT 对照：4M 尺度纯负担（容量门槛），R1 配方需 student ≥1.5B
+  - 系列第 11 篇素材齐备（含路径 B 负结果与容量门槛两个稀缺素材）
+- [ ] 真实端侧小模型立项（终点二）：底座 Qwen2.5-0.5B/1.5B + 云端大 teacher 垂直 CoT 语料，
+  迁移清单见 docs/distill-roadmap.md 决策树末节
 
 ## 🔧 代码优化（2026-09-16 全库扫描，留作 v3.2.0 候选）
 
