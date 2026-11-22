@@ -1,10 +1,12 @@
 """知识蒸馏数据工具。
 
-提供两类功能：
-1. teacher 数据增强 — 用指令微调模型（Qwen/DeepSeek）生成训练答案
-2. 主题扩展 — 生成更多主题的 Q&A 数据，测试模型容量
+提供三类功能：
+1. teacher 语料生成 — 两段式：teacher 发散主题 → 逐题作答（路径 A 数据级蒸馏的语料源）
+2. teacher 数据增强 — 用指令微调模型（Qwen/DeepSeek）生成训练答案
+3. 主题扩展 — 生成更多主题的 Q&A 数据，测试模型容量
 
 用法：
+    uv run python -m distill.data --method generate --teacher Qwen/Qwen2.5-1.5B-Instruct --topics 500
     uv run python -m distill.data --method augment --teacher Qwen/Qwen2.5-1.5B-Instruct
     uv run python -m distill.data --method expand --topics 30
 """
@@ -56,6 +58,20 @@ EXTRA_GENERAL_TOPICS = [
 
 PREFIXES = ["", "你知道", "请问", "帮我解释下", "你能告诉我", "能不能说说", "讲一下", "简单说说"]
 REPEATS = 4
+
+# teacher 发散主题的领域分布（教学演示口径：知识问答，避开时效/争议话题）
+CATEGORIES = [
+    "机器学习与人工智能",
+    "计算机与编程",
+    "数学与逻辑",
+    "物理与天文",
+    "化学与生物",
+    "地理与自然",
+    "历史与文化",
+    "生活常识",
+    "语言与文学",
+    "健康与安全",
+]
 
 
 def generate_topic_dataset(topics: list[tuple[str, str]], path: str) -> list[dict[str, str]]:
@@ -177,15 +193,175 @@ def augment(teacher_name: str) -> None:
     print(f"\n生成 {len(data)} 条 → {out_path}")
 
 
+def _parse_topic_list(raw: str) -> list[str]:
+    """从 teacher 输出解析主题问题列表。
+
+    1.5B teacher 输出形态不稳定：纯行、编号、JSON 数组、Python repr
+    （{'question': '…'}）、markdown 围栏都会出现。统一策略：剥围栏后，
+    用正则提取所有"不含引号/括号/换行的、以？结尾的片段"，
+    长度过滤 + 去重——对各种壳一视同仁。
+    """
+    import re
+
+    text = raw.strip()
+    text = re.sub(r"^```(?:json)?\s*|\s*```$", "", text, flags=re.S)
+
+    topics: list[str] = []
+    for m in re.finditer(r"[^\n\"'“”{}()\[\]]{2,}？", text):
+        q = m.group(0).strip()
+        q = q.lstrip(" -0123456789.、？")
+        if len(q) < 5 or q in topics:
+            continue
+        topics.append(q)
+    return topics
+
+
+def generate(
+    teacher_name: str,
+    topics_count: int,
+    holdout: int,
+    val_topics: int,
+    repeats: int,
+) -> None:
+    """两段式语料生成：teacher 发散主题 → 逐题作答 → 前缀增强落盘。
+
+    产出（均在 distill/data/ 下）：
+    - generated_qa.jsonl   全量 (prompt, completion) 唯一对，含主题来源，供人工抽检
+    - train_generated.jsonl 训练集（前缀变体 × repeats，seed=42 打乱）
+    - val_generated.jsonl   验证集（从训练主题中划出，非行级切分，防同题泄漏）
+    - ood_questions.json    训练从未见过的主题问题，供 eval_ood.py 用
+
+    Args:
+        teacher_name: teacher 模型名（HuggingFace id）。
+        topics_count: 生成的主题总数（不含 holdout/val 划走的部分）。
+        holdout: OOD 评测保留的主题数（不进训练）。
+        val_topics: 验证集主题数（不进训练，但同分布）。
+        repeats: 每条 (前缀, 问答) 的重复次数。
+    """
+    import torch
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+
+    tok = AutoTokenizer.from_pretrained(teacher_name)
+    # transformers 4.48 用 torch_dtype；bf16 在 M 系 MPS 上比 fp32 快约一倍
+    model = AutoModelForCausalLM.from_pretrained(teacher_name, torch_dtype=torch.bfloat16)
+    model.eval()
+    device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")
+    model.to(device)
+    for p in model.parameters():
+        p.requires_grad = False
+    print(f"Teacher: {teacher_name} ({device})")
+
+    def chat(question: str, max_new_tokens: int, temperature: float) -> str:
+        messages = [
+            {"role": "system", "content": "你是一个简洁的知识助手。"},
+            {"role": "user", "content": question},
+        ]
+        text = tok.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+        inputs = tok(text, return_tensors="pt").to(model.device)
+        with torch.no_grad():
+            output = model.generate(
+                **inputs,
+                max_new_tokens=max_new_tokens,
+                temperature=temperature,
+                top_p=0.9,
+                do_sample=temperature > 0,
+                pad_token_id=tok.eos_token_id,
+            )
+        gen_ids = output[0][inputs["input_ids"].shape[1] :]
+        decoded: str = tok.decode(gen_ids, skip_special_tokens=True)
+        return decoded.strip()
+
+    # ── 第一段：按领域发散主题 ──
+    per_category = max(1, topics_count // len(CATEGORIES))
+    seen = {q for q, _ in ORIGINAL_TOPICS}
+    topics: list[str] = []
+    for cat in CATEGORIES:
+        raw = chat(
+            f"请列出{per_category}个适合教学演示的中文知识问答主题，领域：{cat}。"
+            "要求：每行一个问题，以？结尾，覆盖该领域不同的知识点，不要重复；"
+            "不要编号、不要 JSON、不要任何解释。",
+            max_new_tokens=1600,
+            temperature=0.9,
+        )
+        got = _parse_topic_list(raw)
+        for q in got:
+            if q not in seen:
+                seen.add(q)
+                topics.append(q)
+        print(f"  {cat}: +{len(got)} (累计 {len(topics)})")
+    random.seed(42)
+    random.shuffle(topics)
+    if len(topics) < topics_count:
+        print(f"⚠ 主题数 {len(topics)} 未达目标 {topics_count}（teacher 输出上限），继续")
+
+    ood_set = topics[:holdout]
+    val_set = topics[holdout : holdout + val_topics]
+    train_set = topics[holdout + val_topics :]
+    print(f"主题划分: 训练 {len(train_set)} / 验证 {len(val_set)} / OOD {len(ood_set)}")
+
+    # ── 第二段：逐题作答（一句话 ≤40 字，低温保准确）──
+    qa_pairs: list[dict[str, str]] = []
+    for i, q in enumerate(train_set + val_set):
+        answer = ""
+        for _ in range(2):  # 空/超长答案重试一次
+            answer = chat(
+                f"用一句不超过40个字的完整句子准确回答：{q}\n要求：直接给答案，不要列表、编号、引号或解释。",
+                max_new_tokens=80,
+                temperature=0.3,
+            )
+            # 只取第一行；一句话要求下句号截断无损（列表型输出已被 prompt 禁掉）
+            answer = answer.split("\n")[0].strip().strip('"“”')
+            if 4 <= len(answer) <= 60:
+                break
+        if not (4 <= len(answer) <= 60):
+            print(f"  ✗ 跳过（答案长度不合规）: {q} -> {answer[:30]}")
+            continue
+        qa_pairs.append({"prompt": q, "completion": answer})
+        if (i + 1) % 25 == 0:
+            print(f"  作答进度: {i + 1}/{len(train_set) + len(val_set)}")
+
+    with open("distill/data/generated_qa.jsonl", "w", encoding="utf-8") as f:
+        for item in qa_pairs:
+            f.write(json.dumps(item, ensure_ascii=False) + "\n")
+
+    val_prompts = set(val_set)
+    train_rows: list[dict[str, str]] = []
+    val_rows: list[dict[str, str]] = []
+    for item in qa_pairs:
+        target = val_rows if item["prompt"] in val_prompts else train_rows
+        for pf in PREFIXES:
+            for _ in range(repeats):
+                target.append({"prompt": pf + item["prompt"], "completion": item["completion"]})
+    random.seed(42)
+    random.shuffle(train_rows)
+
+    with open("distill/data/train_generated.jsonl", "w", encoding="utf-8") as f:
+        for item in train_rows:
+            f.write(json.dumps(item, ensure_ascii=False) + "\n")
+    with open("distill/data/val_generated.jsonl", "w", encoding="utf-8") as f:
+        for item in val_rows:
+            f.write(json.dumps(item, ensure_ascii=False) + "\n")
+    with open("distill/data/ood_questions.json", "w", encoding="utf-8") as f:
+        json.dump({"ood": ood_set, "val_topics": val_set}, f, ensure_ascii=False, indent=2)
+
+    n_train_topics = sum(1 for item in qa_pairs if item["prompt"] not in val_prompts)
+    print(f"\n生成完成: {n_train_topics} 训练主题 / {len(val_rows)} 验证行 / {len(ood_set)} OOD 问题 → distill/data/")
+
+
 def main() -> None:
-    """命令行入口：augment（teacher 增强）或 expand（主题扩展）。"""
+    """命令行入口：generate（两段式语料生成）/ augment（teacher 增强）/ expand（主题扩展）。"""
     ap = argparse.ArgumentParser()
-    ap.add_argument("--method", choices=["augment", "expand"], required=True)
+    ap.add_argument("--method", choices=["generate", "augment", "expand"], required=True)
     ap.add_argument("--teacher", default="Qwen/Qwen2.5-1.5B-Instruct")
-    ap.add_argument("--topics", type=int, default=30)
+    ap.add_argument("--topics", type=int, default=30, help="generate: 主题总数")
+    ap.add_argument("--holdout", type=int, default=15, help="generate: OOD 保留主题数")
+    ap.add_argument("--val_topics", type=int, default=10, help="generate: 验证集主题数")
+    ap.add_argument("--repeats", type=int, default=1, help="generate: 前缀变体重复次数")
     args = ap.parse_args()
 
-    if args.method == "augment":
+    if args.method == "generate":
+        generate(args.teacher, args.topics, args.holdout, args.val_topics, args.repeats)
+    elif args.method == "augment":
         augment(args.teacher)
     else:
         expand(args.topics)

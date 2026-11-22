@@ -1,0 +1,27 @@
+# 蒸馏实验专用配置：路径 A（数据级）与路径 B（logits 级）共用。
+# 与 train/config.yml 的差异只在数据/tokenizer/save_dir 三处，
+# 模型结构保持与主线一致（4L/4H/256d GQA），保证可比性。
+data:
+  train_path: distill/data/train_generated.jsonl
+  val_path: distill/data/val_generated.jsonl
+model:
+  dropout: 0.1
+  n_embd: 256
+  n_head: 4
+  n_kv_head: 2
+  n_layer: 4
+  seq_len: 128
+tokenizer:
+  path: distill/tokenizer.json
+  type: hf_tokenizers
+training:
+  batch_size: 16
+  early_stopping_patience: 15
+  eval_interval: 50
+  lr: 0.001
+  max_steps: 5000
+  micro_batch: 4
+  save_dir: distill/checkpoints
+  seed: 42
+  warmup_steps: 100
+  weight_decay: 0.1
