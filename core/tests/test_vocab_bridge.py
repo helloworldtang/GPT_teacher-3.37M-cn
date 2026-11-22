@@ -32,9 +32,18 @@ class FakeTok:
 def test_build_exact_pairs_filters_unmatched() -> None:
     student = FakeTok({0: "你", 1: "好", 2: "机器"})
     teacher = FakeTok({5: "你", 7: "好", 9: "世", 11: "的"})
-    pairs_t, pairs_s = build_exact_pairs(student, teacher, student_vocab=3, teacher_vocab=12)
+    pairs_t, pairs_s = build_exact_pairs(student, teacher, student_vocab=3, teacher_vocab=12, mode="exact")
     assert pairs_t.tolist() == [5, 7]
     assert pairs_s.tolist() == [0, 1]
+
+
+def test_prefix_mode_longest_prefix_wins() -> None:
+    # teacher "ABC" 的词表内最长前缀是 "AB"；"X" 无任何前缀在词表中
+    student = FakeTok({0: "A", 1: "AB", 2: "B"})
+    teacher = FakeTok({5: "ABC", 7: "B", 9: "X"})
+    pairs_t, pairs_s = build_exact_pairs(student, teacher, student_vocab=3, teacher_vocab=10)
+    assert pairs_t.tolist() == [5, 7]
+    assert pairs_s.tolist() == [1, 2]
 
 
 def test_project_renormalizes_and_reports_coverage() -> None:
@@ -70,12 +79,18 @@ def test_duplicate_teacher_strings_aggregate() -> None:
 
 
 def test_align_by_offsets_exact_match_only() -> None:
-    mapping = align_by_offsets(student_ends=[1, 2, 4], teacher_ends=[2, 3, 4])
+    mapping = align_by_offsets(student_ends=[1, 2, 4], teacher_ends=[2, 3, 4], mode="exact")
     assert mapping.tolist() == [-1, 0, 2]
 
 
+def test_align_by_offsets_nearest_no_future_leak() -> None:
+    # nearest：取不超过 student 结尾的最近 teacher 位置；student 1 前无 teacher 边界仍为 -1
+    mapping = align_by_offsets(student_ends=[1, 3, 4], teacher_ends=[2], mode="nearest")
+    assert mapping.tolist() == [-1, 0, 0]
+
+
 def test_align_by_offsets_no_match() -> None:
-    mapping = align_by_offsets(student_ends=[1, 3], teacher_ends=[2])
+    mapping = align_by_offsets(student_ends=[1, 3], teacher_ends=[2], mode="exact")
     assert mapping.tolist() == [-1, -1]
 
 

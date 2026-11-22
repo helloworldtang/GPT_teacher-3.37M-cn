@@ -35,6 +35,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, PreTrainedTokenize
 
 from core.model import GPT
 from core.utils import ensure_dir, set_seed
+from distill.vocab_bridge import align_by_offsets
 
 # ── 数据集 ──────────────────────────────────────────
 
@@ -218,7 +219,6 @@ class KDDualDataset(Dataset[KDDualSample]):
                 t_enc = teacher_tok(text, add_special_tokens=False, return_offsets_mapping=True)
                 t_ids = t_enc["input_ids"]
                 t_ends = [end for _, end in t_enc["offset_mapping"]]
-                t_pos = {end: j for j, end in enumerate(t_ends)}
 
                 # CE mask：目标 token 属于 completion（起始偏移越过 prompt）
                 starts = [0, *(st for st, _ in s_offsets), len(text)][: len(s_ids)]
@@ -227,7 +227,9 @@ class KDDualDataset(Dataset[KDDualSample]):
                     y.append(s_ids[i + 1] if starts[i + 1] >= len(prompt) else -100)
 
                 s_x = s_ids[: len(y)]
-                align = [t_pos.get(e, -1) for e in s_ends[: len(y)]]
+                # nearest 对齐：teacher 上下文是 student 上下文的前缀（看得更短），
+                # 不泄漏目标 token，对齐率远高于精确匹配
+                align = align_by_offsets(s_ends[: len(y)], t_ends, mode="nearest").tolist()
                 while len(s_x) < seq_len:
                     s_x.append(pad)
                     y.append(-100)
@@ -540,7 +542,7 @@ def train_kd_bridge(args: argparse.Namespace) -> None:
                 t_probs = F.softmax(t_logits / args.temperature, dim=-1)
                 proj, coverage = project_distribution(t_probs, pairs_t.to(device), pairs_s.to(device), vocab_size)
                 # 把 teacher 位置分布 gather 到 student 位置（未对齐位置清零）
-                idx = align.clamp_min(0).unsqueeze(-1).expand(-1, -1, vocab_size)
+                idx = align.clamp_min(0).unsqueeze(-1).expand(-1, -1, vocab_size).contiguous()
                 proj_at = proj.gather(1, idx) * (align >= 0).unsqueeze(-1)
                 teacher_log = proj_at.clamp_min(1e-9).log()
 
@@ -549,9 +551,12 @@ def train_kd_bridge(args: argparse.Namespace) -> None:
                 student_logits, teacher_log, s_y, aligned_mask, args.alpha, args.temperature
             )
 
-            # 对齐率/词表覆盖率的滑动诊断（走通路径的关键观测）
-            align_rate_smoothed = 0.98 * align_rate_smoothed + 0.02 * aligned_mask.float().mean().item()
+            # 对齐率/词表覆盖率的滑动诊断（分母是 CE 有效位，非整条填充序列）
             ce_mask = s_y != -100
+            align_rate_smoothed = (
+                0.98 * align_rate_smoothed
+                + 0.02 * (aligned_mask.float().sum() / ce_mask.float().sum().clamp_min(1)).item()
+            )
             cov_at = coverage.gather(1, align.clamp_min(0)) * (align >= 0).float()
             cov_mean = (cov_at * ce_mask.float()).sum() / ce_mask.float().sum().clamp_min(1)
             coverage_smoothed = 0.98 * coverage_smoothed + 0.02 * cov_mean.item()

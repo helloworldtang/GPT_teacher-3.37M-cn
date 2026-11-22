@@ -31,19 +31,28 @@ def build_exact_pairs(
     teacher_tok: Any,
     student_vocab: int,
     teacher_vocab: int,
+    mode: str = "prefix",
 ) -> tuple[Tensor, Tensor]:
-    """按解码字符串精确相等构建 teacher→student 词表配对。
+    """构建 teacher→student 词表配对。
+
+    两种模式：
+    - exact：解码字符串精确相等才配对（最保守，覆盖率低）。
+    - prefix：teacher token 字符串取「词表内最长 student 前缀」配对——
+      teacher 的多字 token 质量归给它的 student 前缀。事件 "文本以 t 开头"
+      蕴含 "文本以 s 开头"，且每个 teacher token 只归一处，配对保持互斥，
+      投影分布仍是合法概率（P(s) 是真值的下界）。
 
     Args:
         student_tok: student 分词器（TokenizerLike 接口）。
         teacher_tok: teacher 分词器（HF PreTrainedTokenizerFast）。
         student_vocab: student 词表大小。
         teacher_vocab: teacher 词表大小。
+        mode: "exact" 或 "prefix"。
 
     Returns:
         (teacher_ids, student_ids) 两个等长 LongTensor：
         teacher_probs[..., teacher_ids] 沿最后一维取出后按 student_ids
-        scatter_add 即得投影分布。
+        聚合即得投影分布。
     """
     # student 侧：词表小，逐 id decode 建字符串索引
     s_str_to_id: dict[str, int] = {}
@@ -52,14 +61,25 @@ def build_exact_pairs(
         if text and text not in s_str_to_id:
             s_str_to_id[text] = sid
 
-    # teacher 侧：151K 逐 id decode（一次性，秒级），建字符串 → id 列表
+    # teacher 侧：151K 逐 id decode（一次性，秒级）
     t_pairs_t: list[int] = []
     t_pairs_s: list[int] = []
     for tid in range(teacher_vocab):
         text = teacher_tok.decode([tid])
         if not text:
             continue
-        matched = s_str_to_id.get(text)
+        if mode == "exact":
+            matched = s_str_to_id.get(text)
+            if matched is not None:
+                t_pairs_t.append(tid)
+                t_pairs_s.append(matched)
+            continue
+        # prefix：找词表内最长前缀
+        matched = None
+        for end in range(len(text), 0, -1):
+            matched = s_str_to_id.get(text[:end])
+            if matched is not None:
+                break
         if matched is not None:
             t_pairs_t.append(tid)
             t_pairs_s.append(matched)
@@ -86,25 +106,48 @@ def project_distribution(
     """
     gathered = teacher_probs[..., pairs_t]  # (..., K)
     coverage = gathered.sum(dim=-1)  # teacher 概率和为 1，匹配量即占比
-    proj = torch.zeros(*teacher_probs.shape[:-1], student_vocab, dtype=teacher_probs.dtype)
-    proj.scatter_add_(-1, pairs_s.expand(*teacher_probs.shape[:-1], pairs_s.size(0)), gathered)
-    proj = proj / coverage.clamp_min(1e-8).unsqueeze(-1)
+    # 用 index_add_ 而非 scatter_add_：MPS 的 scatter_add_ 对展开索引有
+    # "Placeholder storage has not been allocated" bug，index_add_ 的
+    # 1-D 索引 + 2D 源形态在 MPS 上稳定。
+    batch = teacher_probs.shape[:-1]
+    flat = gathered.reshape(-1, gathered.size(-1))  # (N, K)
+    proj_flat = torch.zeros(flat.size(0), student_vocab, dtype=teacher_probs.dtype)
+    try:
+        proj_flat.index_add_(1, pairs_s, flat)
+    except RuntimeError:
+        # MPS 后端在大词表 softmax 输出上偶发 "Placeholder storage has not
+        # been allocated"（合成最小复现不出，真实 teacher 前向后必现）。
+        # gather 后张量已小（N×K），CPU 执行 index_add 再搬回，代价毫秒级。
+        proj_flat.index_add_(1, pairs_s.cpu(), flat.cpu())
+        proj_flat = proj_flat.to(flat.device)
+    proj = (proj_flat / coverage.reshape(-1, 1).clamp_min(1e-8)).reshape(*batch, student_vocab)
     return proj, coverage
 
 
-def align_by_offsets(student_ends: list[int], teacher_ends: list[int]) -> Tensor:
+def align_by_offsets(student_ends: list[int], teacher_ends: list[int], mode: str = "nearest") -> Tensor:
     """按字符偏移结尾对齐 student/teacher 位置。
 
-    对每个 student 位置 i（上下文截至 student_ends[i]），找 teacher 中
-    结尾偏移恰好相等的位置；找不到则为 -1（该位置不参与 KL）。
-    两侧 ends 均须严格递增（byte-level 切分的自然性质）。
+    两种模式：
+    - exact：仅接受结尾偏移恰好相等（对齐率低）。
+    - nearest：取「不超过 student 结尾的最近 teacher 位置」——teacher 的
+      上下文是 student 上下文的前缀，只是看得更短，不泄漏目标 token。
 
     Args:
         student_ends: student 各 token 的结尾字符偏移。
         teacher_ends: teacher 各 token 的结尾字符偏移。
+        mode: "exact" 或 "nearest"。
 
     Returns:
         LongTensor [len(student_ends)]，元素为 teacher 位置或 -1。
     """
-    t_pos = {end: j for j, end in enumerate(teacher_ends)}
-    return torch.tensor([t_pos.get(e, -1) for e in student_ends], dtype=torch.long)
+    if mode == "exact":
+        t_pos = {end: j for j, end in enumerate(teacher_ends)}
+        return torch.tensor([t_pos.get(e, -1) for e in student_ends], dtype=torch.long)
+
+    import bisect
+
+    out: list[int] = []
+    for e in student_ends:
+        j = bisect.bisect_right(teacher_ends, e) - 1
+        out.append(j if j >= 0 else -1)
+    return torch.tensor(out, dtype=torch.long)
