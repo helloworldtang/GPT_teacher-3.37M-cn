@@ -14,8 +14,6 @@ from transformers import AutoTokenizer
 from core.infer import generate
 from core.model import GPT
 
-TEACHER_MODEL = "uer/gpt2-chinese-cluecorpussmall"
-
 
 def adapt_tokenizer(tok: Any) -> Any:
     """把 HF tokenizer 适配为 core.infer.generate 需要的接口。
@@ -36,6 +34,7 @@ def main() -> None:
     """命令行入口：批量跑测试问题（或 --prompt 单题）并打印置信度。"""
     ap = argparse.ArgumentParser()
     ap.add_argument("--ckpt", default="distill/checkpoints/distill_best.pt")
+    ap.add_argument("--teacher", type=str, default=None, help="teacher tokenizer 来源（默认读 checkpoint 内记录）")
     ap.add_argument("--prompt", type=str, default=None)
     ap.add_argument("--temperature", type=float, default=0.3)
     ap.add_argument("--top_k", type=int, default=40)
@@ -47,7 +46,16 @@ def main() -> None:
     cfg = ckpt["cfg"]
     vocab_size = ckpt["vocab_size"]
 
-    tok = adapt_tokenizer(AutoTokenizer.from_pretrained(TEACHER_MODEL))
+    # teacher 名以 checkpoint 记录为准（训练时写入）；旧版产物无此字段时
+    # 显式报错，不静默猜测——用错 tokenizer 会在词表断言处炸出更迷惑的错。
+    teacher = args.teacher or ckpt.get("teacher")
+    if not teacher:
+        raise SystemExit(
+            f"{args.ckpt} 是旧版产物，未记录 teacher tokenizer 来源。"
+            "请用 --teacher 显式指定，或用新版 distill.train 重训。"
+        )
+
+    tok = adapt_tokenizer(AutoTokenizer.from_pretrained(teacher))
     assert tok.vocab_size == vocab_size
 
     device = torch.device("mps" if torch.backends.mps.is_available() else "cpu")

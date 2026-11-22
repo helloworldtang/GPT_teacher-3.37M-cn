@@ -125,15 +125,30 @@ def distillation_loss(
     Returns:
         组合损失标量。
     """
-    ce = F.cross_entropy(
-        student_logits.view(-1, student_logits.size(-1)),
-        targets.view(-1),
-        ignore_index=-100,
-    )
-    student_soft = F.log_softmax(student_logits / temperature, dim=-1)
-    teacher_soft = F.softmax(teacher_logits / temperature, dim=-1)
-    kl = F.kl_div(student_soft, teacher_soft, reduction="batchmean") * (temperature**2)
-    return alpha * ce + (1 - alpha) * kl
+    # CE 项带 ignore_index：全 batch 均为 -100 时返回 nan，
+    # 权重为 0 也不该让 nan 传染（0 × nan = nan），故 alpha=0 时跳过计算。
+    if alpha > 0:
+        ce = F.cross_entropy(
+            student_logits.view(-1, student_logits.size(-1)),
+            targets.view(-1),
+            ignore_index=-100,
+        )
+        ce_term = alpha * ce
+    else:
+        ce_term = student_logits.new_zeros(())
+    # KL 只在 targets != -100 的位置计算：prompt/pad 位置 teacher 的条件分布
+    # 与"下一个 completion token"无关，对齐它们是噪声信号。
+    valid = targets.view(-1) != -100
+    if valid.any():
+        s = student_logits.reshape(-1, student_logits.size(-1))[valid]
+        t = teacher_logits.reshape(-1, teacher_logits.size(-1))[valid]
+        student_soft = F.log_softmax(s / temperature, dim=-1)
+        teacher_soft = F.softmax(t / temperature, dim=-1)
+        # batchmean 在 [N_valid, V] 上即"每个有效 token 的平均 KL"
+        kl = F.kl_div(student_soft, teacher_soft, reduction="batchmean") * (temperature**2)
+    else:
+        kl = student_logits.new_zeros(())
+    return ce_term + (1 - alpha) * kl
 
 
 # ── 评估 ──────────────────────────────────────────────
@@ -272,6 +287,7 @@ def train_kd(args: argparse.Namespace) -> None:
                                     }
                                 },
                                 "vocab_size": vocab_size,
+                                "teacher": args.teacher,
                             },
                             os.path.join(args.save_dir, "distill_best.pt"),
                         )
