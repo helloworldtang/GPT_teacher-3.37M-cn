@@ -36,8 +36,8 @@ def judge_with_teacher(questions: list[str], answers: list[str], teacher: str) -
     verdicts: list[bool] = []
     for q, a in zip(questions, answers, strict=True):
         messages = [
-            {"role": "system", "content": "你是阅卷员。只输出“对”或“错”，不要任何解释。"},
-            {"role": "user", "content": f"问题：{q}\n学生回答：{a}\n这个回答是否正确？"},
+            {"role": "system", "content": "你是严格的阅卷员。只输出“对”或“错”，不要任何解释。"},
+            {"role": "user", "content": f"问题：{q}\n学生回答：{a}\n这个回答是否既语义通顺又正确回答了问题？"},
         ]
         text = tok.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
         inputs = tok(text, return_tensors="pt").to(model.device)

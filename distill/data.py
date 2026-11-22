@@ -324,14 +324,17 @@ def generate(
         for item in qa_pairs:
             f.write(json.dumps(item, ensure_ascii=False) + "\n")
 
-    val_prompts = set(val_set)
+    # 验证集 = 同题留出前缀（最后一个前缀变体只进 val）：对"拟合语料"的
+    # 数据级蒸馏，选型信号应是"已知问题的表面变体答得好不好"，而非
+    # held-out 主题的 loss（后者 3M student 天然下不去，会误杀记忆阶段）。
+    # 泛化能力另由 OOD 问题集单独评测。
     train_rows: list[dict[str, str]] = []
     val_rows: list[dict[str, str]] = []
     for item in qa_pairs:
-        target = val_rows if item["prompt"] in val_prompts else train_rows
-        for pf in PREFIXES:
+        for pf in PREFIXES[:-1]:
             for _ in range(repeats):
-                target.append({"prompt": pf + item["prompt"], "completion": item["completion"]})
+                train_rows.append({"prompt": pf + item["prompt"], "completion": item["completion"]})
+        val_rows.append({"prompt": PREFIXES[-1] + item["prompt"], "completion": item["completion"]})
     random.seed(42)
     random.shuffle(train_rows)
 
@@ -344,8 +347,7 @@ def generate(
     with open("distill/data/ood_questions.json", "w", encoding="utf-8") as f:
         json.dump({"ood": ood_set, "val_topics": val_set}, f, ensure_ascii=False, indent=2)
 
-    n_train_topics = sum(1 for item in qa_pairs if item["prompt"] not in val_prompts)
-    print(f"\n生成完成: {n_train_topics} 训练主题 / {len(val_rows)} 验证行 / {len(ood_set)} OOD 问题 → distill/data/")
+    print(f"\n生成完成: {len(train_rows)} 训练行 / {len(val_rows)} 验证行(同题留出前缀) / {len(ood_set)} OOD 问题 → distill/data/")
 
 
 def main() -> None:

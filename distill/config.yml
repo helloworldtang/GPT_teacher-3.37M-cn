@@ -16,7 +16,9 @@ tokenizer:
   type: hf_tokenizers
 training:
   batch_size: 16
-  early_stopping_patience: 15
+  # 验证集是 held-out 主题（非同题前缀变体），3M student 在其上的 loss
+  # 天然下不去——早停按"拟合训练语料"的节奏放宽，避免误杀记忆阶段
+  early_stopping_patience: 60
   eval_interval: 50
   lr: 0.001
   max_steps: 5000
